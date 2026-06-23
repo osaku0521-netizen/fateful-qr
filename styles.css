@@ -416,6 +416,7 @@ body {
 .scan-area {
     width: 100%;
     aspect-ratio: 4/3;
+    max-height: 380px;
     background: #0f1118;
     border: 4px solid #5a647c;
     border-radius: 8px;

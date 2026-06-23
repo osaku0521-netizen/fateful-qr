@@ -337,17 +337,36 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 if (!html5Qrcode) return;
 
-                // Set the container aspect ratio dynamically to match the running stream
-                const settings = html5Qrcode.getRunningTrackSettings();
-                if (settings && settings.width && settings.height) {
+                // Wait a tiny bit for video element dimensions to be populated on slower devices
+                let videoEl = document.querySelector('#qr-reader video');
+                if (videoEl && (!videoEl.videoWidth || !videoEl.videoHeight)) {
+                    await new Promise(r => setTimeout(r, 150));
+                }
+
+                let streamWidth = 0;
+                let streamHeight = 0;
+
+                if (videoEl && videoEl.videoWidth && videoEl.videoHeight) {
+                    streamWidth = videoEl.videoWidth;
+                    streamHeight = videoEl.videoHeight;
+                } else {
+                    const settings = html5Qrcode.getRunningTrackSettings();
+                    if (settings && settings.width && settings.height) {
+                        streamWidth = settings.width;
+                        streamHeight = settings.height;
+                    }
+                }
+
+                if (streamWidth && streamHeight) {
                     const scanArea = document.querySelector('.scan-area');
                     if (scanArea) {
-                        scanArea.style.aspectRatio = `${settings.width} / ${settings.height}`;
-                        console.log(`Updated scan-area aspect-ratio to: ${settings.width} / ${settings.height}`);
+                        scanArea.style.aspectRatio = `${streamWidth} / ${streamHeight}`;
+                        console.log(`Updated scan-area aspect-ratio to: ${streamWidth} / ${streamHeight}`);
                     }
                 }
 
                 const capabilities = html5Qrcode.getRunningTrackCapabilities();
+                const settings = html5Qrcode.getRunningTrackSettings();
                 console.log("Camera capabilities:", capabilities);
                 console.log("Camera settings:", settings);
 
