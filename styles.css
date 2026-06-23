@@ -1246,3 +1246,22 @@ body {
     50% { transform: translateY(90px); }
     100% { transform: translateY(-90px); }
 }
+
+.scan-instruction-custom {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--color-gold);
+    font-size: 11px;
+    font-family: 'DotGothic16', sans-serif;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 4px 10px;
+    border: 1px solid var(--color-mystic-purple);
+    border-radius: 4px;
+    white-space: nowrap;
+    text-shadow: 1px 1px 0 #000;
+    pointer-events: none;
+    z-index: 12;
+}
