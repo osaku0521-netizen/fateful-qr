@@ -320,7 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
         previewContainer.innerHTML = `<img src="${objectUrl}" class="scanned-image-preview" alt="Scanned Target Image">`;
 
         if (!html5Qrcode) {
-            html5Qrcode = new Html5Qrcode("qr-reader"); // Keep instance for scanning static files
+            html5Qrcode = new Html5Qrcode("qr-reader", {
+                useBarCodeDetectorIfSupported: true,
+                verbose: false
+            }); // Keep instance for scanning static files with native scanning enabled
         }
 
         setTimeout(async () => {
@@ -1142,7 +1145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         showPanel('input');
         
-        qrReaderEl.classList.add('hidden');
         scanPlaceholder.classList.remove('hidden');
     });
 });
