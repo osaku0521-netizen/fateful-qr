@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=40">
+    <link rel="stylesheet" href="styles.css?v=41">
     <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 </head>
@@ -46,11 +46,12 @@
 
                     <!-- Scan / Camera Area -->
                     <div class="scan-area">
+                        <video id="webcamera" class="hidden" autoplay playsinline></video>
                         <div id="qr-reader" class="hidden"></div>
                         <div id="scan-overlay-custom" class="scan-overlay-custom hidden">
                             <div class="scan-frame-custom"></div>
                             <div class="scan-line-custom"></div>
-                            <div class="scan-instruction-custom">QRコードから25cmほど離して<br>ピントを合わせてください</div>
+                            <div class="scan-instruction-custom">枠内にQRコードを合わせて<br>「撮影する」を押してください</div>
                         </div>
                         <div id="scan-placeholder" class="scan-placeholder">
                             <div class="fateful-aura-badge">Fateful Aura</div>
@@ -69,8 +70,11 @@
                         <button id="btn-start-scan" class="btn btn-accent btn-large">
                             <span class="icon">📷</span>カメラを起動してスキャン
                         </button>
+                        <button id="btn-snap" class="btn btn-accent btn-large hidden">
+                            <span class="icon">📸</span>撮影する
+                        </button>
                         <button id="btn-stop-scan" class="btn btn-secondary btn-large hidden">
-                            <span class="icon">⏹️</span>スキャンを停止
+                            <span class="icon">⏹️</span>キャンセル
                         </button>
                         <label for="file-upload" class="btn btn-primary">
                             <span class="icon">📁</span>保存したQRコード画像を選択
@@ -267,6 +271,6 @@
     </div>
 
     <!-- Application Script -->
-    <script src="app.js?v=40" defer></script>
+    <script src="app.js?v=41" defer></script>
 </body>
 </html>

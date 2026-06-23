@@ -458,6 +458,16 @@ body {
     display: block !important;
 }
 
+#webcamera {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 3;
+}
+#webcamera.hidden {
+    display: none !important;
+}
+
 
 .scan-placeholder {
     display: flex;

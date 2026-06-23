@@ -33,7 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const scanPlaceholder = document.getElementById('scan-placeholder');
     const fileUpload = document.getElementById('file-upload');
     
+    const webcamera = document.getElementById('webcamera');
     const btnStartScan = document.getElementById('btn-start-scan');
+    const btnSnap = document.getElementById('btn-snap');
     const btnStopScan = document.getElementById('btn-stop-scan');
     const btnMockScan = document.getElementById('btn-mock-scan');
     const btnProceedJudge = document.getElementById('btn-proceed-judge');
@@ -43,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDownloadCert = document.getElementById('btn-download-cert');
     const btnShareSns = document.getElementById('btn-share-sns');
     const btnRestart = document.getElementById('btn-restart');
+
+    let localStream = null;
 
     // Result UI Elements
     const tallyCountEl = document.getElementById('tally-count');
@@ -378,158 +382,169 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 800);
     });
 
-    async function applyDynamicConstraints() {
-        try {
-            if (!html5Qrcode || !html5Qrcode.isScanning) return;
-
-            let capabilities = {};
-            try {
-                capabilities = html5Qrcode.getRunningTrackCapabilities() || {};
-            } catch (capErr) {
-                console.warn("Failed to get track capabilities:", capErr);
-            }
-
-            const constraints = {};
-            let hasAdvanced = false;
-            const advancedConstraint = {};
-
-            // 1.5倍のズームを設定してピント合わせを容易にする
-            if (capabilities.zoom) {
-                const idealZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.5));
-                advancedConstraint.zoom = idealZoom;
-                hasAdvanced = true;
-                console.log(`Setting zoom to: ${idealZoom}`);
-            }
-
-            if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
-                constraints.focusMode = "continuous";
-                console.log("Setting focusMode to continuous");
-            }
-
-            if (hasAdvanced) {
-                constraints.advanced = [advancedConstraint];
-            }
-
-            if (Object.keys(constraints).length > 0) {
-                await html5Qrcode.applyVideoConstraints(constraints);
-                console.log("Applied dynamic video constraints successfully:", constraints);
-            }
-        } catch (constrErr) {
-            console.warn("Could not apply dynamic video constraints:", constrErr);
-        }
-    }
-
-    async function startScanner() {
+    async function startCamera() {
         initAudio();
         selectedBirthDate = getSelectedBirthDate();
 
         // UI transitions
-        qrReaderEl.classList.remove('hidden');
+        webcamera.classList.remove('hidden');
         const customOverlay = document.getElementById('scan-overlay-custom');
         if (customOverlay) {
             customOverlay.classList.remove('hidden');
         }
         scanPlaceholder.classList.add('hidden');
         btnStartScan.classList.add('hidden');
+        btnSnap.classList.remove('hidden');
         btnStopScan.classList.remove('hidden');
 
-        if (!html5Qrcode) {
-            html5Qrcode = new Html5Qrcode("qr-reader", {
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-                verbose: false
-            });
-        }
-
-        const config = {
-            fps: 10,
-            useBarCodeDetectorIfSupported: false,
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: false
-            }
-        };
-
         try {
-            const constraints = {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            };
-            
-            await html5Qrcode.start(
-                constraints,
-                config,
-                (decodedText, decodedResult) => {
-                    scannedBarcode = decodedText;
-                    scanSucceeded = true;
-                    fallbackCode = "";
-                    stopScanner();
-                    
-                    // Transition to analysis
-                    showPanel('analyze');
-                    finishAnalysis();
+            localStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 },
-                (errorMessage) => {
-                    // Silent failures
-                }
-            );
-            
-            await applyDynamicConstraints();
+                audio: false
+            });
+            webcamera.srcObject = localStream;
         } catch (err) {
             console.warn("Standard camera startup failed, trying fallback constraints:", err);
             try {
-                // Fallback to minimal constraints
-                await html5Qrcode.start(
-                    { facingMode: "environment" },
-                    config,
-                    (decodedText, decodedResult) => {
-                        scannedBarcode = decodedText;
-                        scanSucceeded = true;
-                        fallbackCode = "";
-                        stopScanner();
-                        
-                        showPanel('analyze');
-                        finishAnalysis();
-                    },
-                    (errorMessage) => {}
-                );
-                await applyDynamicConstraints();
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" },
+                    audio: false
+                });
+                webcamera.srcObject = localStream;
             } catch (fallbackErr) {
                 console.error("Camera startup failed completely:", fallbackErr);
                 alert("カメラの起動に失敗しました。カメラの権限が許可されているか確認するか、画像ファイルを選択して占ってください。");
-                stopScanner();
+                stopCamera();
             }
         }
     }
 
-    async function stopScanner() {
-        if (html5Qrcode && html5Qrcode.isScanning) {
-            try {
-                await html5Qrcode.stop();
-            } catch (err) {
-                console.warn("Failed to stop scanner:", err);
-            }
+    function stopCamera() {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
         }
+        webcamera.srcObject = null;
+        webcamera.classList.add('hidden');
         
-        qrReaderEl.classList.add('hidden');
         const customOverlay = document.getElementById('scan-overlay-custom');
         if (customOverlay) {
             customOverlay.classList.add('hidden');
         }
         scanPlaceholder.classList.remove('hidden');
         btnStartScan.classList.remove('hidden');
+        btnSnap.classList.add('hidden');
         btnStopScan.classList.add('hidden');
     }
 
+    function capturePhoto() {
+        if (!localStream) return;
+        initAudio();
+
+        const width = webcamera.videoWidth || 1280;
+        const height = webcamera.videoHeight || 720;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(webcamera, 0, 0, width, height);
+
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+
+            stopCamera();
+
+            // Transition to analysis panel
+            showPanel('analyze');
+
+            const previewContainer = document.getElementById('scanned-preview-container');
+            const progressFill = document.getElementById('analyze-progress');
+            const progressText = document.getElementById('analyze-text');
+            const resultPanel = document.getElementById('analyze-result-panel');
+
+            resultPanel.classList.add('hidden');
+            progressFill.style.width = '20%';
+            progressText.innerText = '画像を読み込み中...';
+
+            const objectUrl = URL.createObjectURL(blob);
+            previewContainer.innerHTML = `<img src="${objectUrl}" class="scanned-image-preview" alt="Captured Target Image">`;
+
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode("qr-reader", {
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+                    verbose: false
+                });
+            }
+
+            setTimeout(async () => {
+                try {
+                    progressFill.style.width = '60%';
+                    progressText.innerText = '運命の紋章（コード）を検出中...';
+
+                    // Prepare qr-reader for high-res scan
+                    qrReaderEl.style.position = 'fixed';
+                    qrReaderEl.style.top = '-9999px';
+                    qrReaderEl.style.left = '-9999px';
+                    qrReaderEl.style.width = '1000px';
+                    qrReaderEl.style.height = '1000px';
+                    qrReaderEl.style.display = 'block';
+                    qrReaderEl.style.visibility = 'hidden';
+                    qrReaderEl.style.zIndex = '-100';
+
+                    const file = new File([blob], "captured_qr.jpg", { type: "image/jpeg" });
+                    const decodedText = await html5Qrcode.scanFile(file);
+                    scannedBarcode = decodedText;
+                    scanSucceeded = true;
+                    fallbackCode = "";
+
+                    progressFill.style.width = '100%';
+                    progressText.innerText = '解析成功！';
+                    finishAnalysis();
+                } catch (err) {
+                    console.warn("Captured photo decode failed:", err);
+                    scanSucceeded = false;
+                    fallbackCode = "49" + Math.abs(getHashCode("captured_qr.jpg" + blob.size)).toString().substring(0, 11);
+                    scannedBarcode = "";
+
+                    progressFill.style.width = '100%';
+                    progressText.innerText = 'コード未検出（暗号パターン抽出失敗）';
+                    finishAnalysis();
+                } finally {
+                    // Restore styles
+                    qrReaderEl.style.position = '';
+                    qrReaderEl.style.top = '';
+                    qrReaderEl.style.left = '';
+                    qrReaderEl.style.width = '';
+                    qrReaderEl.style.height = '';
+                    qrReaderEl.style.display = '';
+                    qrReaderEl.style.visibility = '';
+                    qrReaderEl.style.zIndex = '';
+
+                    URL.revokeObjectURL(objectUrl);
+                }
+            }, 800);
+        }, 'image/jpeg', 0.95);
+    }
+
     btnStartScan.addEventListener('click', () => {
-        startScanner();
+        startCamera();
+    });
+
+    btnSnap.addEventListener('click', () => {
+        capturePhoto();
     });
 
     btnStopScan.addEventListener('click', () => {
-        stopScanner();
+        stopCamera();
     });
 
     btnMockScan.addEventListener('click', () => {
-        stopScanner(); // Safeguard
+        stopCamera(); // Safeguard
         initAudio();
         selectedBirthDate = getSelectedBirthDate();
         scanSucceeded = true;
@@ -615,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnProceedJudge.addEventListener('click', () => {
-        stopScanner(); // Safeguard
+        stopCamera(); // Safeguard
         if (!scanSucceeded) {
             scannedBarcode = fallbackCode;
         }
@@ -624,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnRetryInput.addEventListener('click', () => {
-        stopScanner(); // Safeguard
+        stopCamera(); // Safeguard
         showPanel('input');
         fileUpload.value = '';
     });
@@ -1315,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // RESTART
     // ----------------------------------------------------------------------
     btnRestart.addEventListener('click', () => {
-        stopScanner(); // Safeguard
+        stopCamera(); // Safeguard
         fileUpload.value = '';
         scannedBarcode = '';
         
