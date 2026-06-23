@@ -219,6 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let html5Qrcode = null;
     let selectedBirthDate = "";
     let scannedBarcode = "";
+    let scanSucceeded = true;
+    let fallbackCode = "";
     let todayDateStr = "";
     let finalVerdict = ""; // "DAIKICHI", "KICHI", or "KYO"
     let finalTally = { daikichi: 0, kichi: 0, kyo: 0 };
@@ -328,18 +330,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const decodedText = await html5Qrcode.scanFile(file);
                 scannedBarcode = decodedText;
+                scanSucceeded = true;
+                fallbackCode = "";
                 
                 progressFill.style.width = '100%';
                 progressText.innerText = '解析成功！';
                 finishAnalysis();
             } catch (err) {
                 console.warn("File QR scan failed, using simulated code based on file metadata:", err);
+                scanSucceeded = false;
                 // Deterministic fallback code to keep game playable
-                const fakeCode = "49" + Math.abs(getHashCode(file.name + file.size)).toString().substring(0, 11);
-                scannedBarcode = fakeCode;
+                fallbackCode = "49" + Math.abs(getHashCode(file.name + file.size)).toString().substring(0, 11);
+                scannedBarcode = "";
                 
                 progressFill.style.width = '100%';
-                progressText.innerText = '解析成功（暗号パターン抽出）';
+                progressText.innerText = 'コード未検出（暗号パターン抽出失敗）';
                 finishAnalysis();
             } finally {
                 // Free URL object resource
@@ -351,6 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btnMockScan.addEventListener('click', () => {
         initAudio();
         selectedBirthDate = getSelectedBirthDate();
+        scanSucceeded = true;
+        fallbackCode = "";
 
         const randomDigits = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         scannedBarcode = "49" + randomDigits.substring(0, 11);
@@ -398,21 +405,43 @@ document.addEventListener('DOMContentLoaded', () => {
     function finishAnalysis() {
         const resultPanel = document.getElementById('analyze-result-panel');
         const resultDetails = document.getElementById('analyze-result-details');
+        const aiBadge = resultPanel.querySelector('.ai-badge');
         
-        const maskedBarcode = scannedBarcode.substring(0, 4) + "********" + scannedBarcode.substring(scannedBarcode.length - 2);
-        const birthYear = selectedBirthDate.split("-")[0];
+        if (scanSucceeded) {
+            aiBadge.classList.remove('error-badge');
+            aiBadge.innerText = '解析完了';
+            btnProceedJudge.innerHTML = '運命の占い師団を招集する';
+            
+            const maskedBarcode = scannedBarcode.substring(0, 4) + "********" + scannedBarcode.substring(scannedBarcode.length - 2);
+            const birthYear = selectedBirthDate.split("-")[0];
+            
+            resultDetails.innerHTML = `
+                運命波形の同調に成功しました。<br>
+                <span style="color: var(--color-gold); font-weight: bold;">バーコード種別: ${scannedBarcode.length > 10 ? 'JAN/EAN-13' : 'QR-Code'}</span><br>
+                <span style="font-size: 12px; color: var(--color-text-muted);">
+                    ターゲット: ${birthYear}年生まれ / 識別子: ${maskedBarcode}
+                </span>
+            `;
+        } else {
+            aiBadge.classList.add('error-badge');
+            aiBadge.innerText = 'コード未検出';
+            btnProceedJudge.innerHTML = '<span class="icon">🔮</span>占い師の直感（デモ）で進む';
+            
+            resultDetails.innerHTML = `
+                画像からバーコードまたはQRコードを検出できませんでした。<br>
+                <span style="font-size: 13px; color: var(--color-text-muted);">
+                    別の画像でやり直すか、占い師の直感（デモモード）で進むことができます。
+                </span>
+            `;
+        }
         
-        resultDetails.innerHTML = `
-            運命波形の同調に成功しました。<br>
-            <span style="color: var(--color-gold); font-weight: bold;">バーコード種別: ${scannedBarcode.length > 10 ? 'JAN/EAN-13' : 'QR-Code'}</span><br>
-            <span style="font-size: 12px; color: var(--color-text-muted);">
-                ターゲット: ${birthYear}年生まれ / 識別子: ${maskedBarcode}
-            </span>
-        `;
         resultPanel.classList.remove('hidden');
     }
 
     btnProceedJudge.addEventListener('click', () => {
+        if (!scanSucceeded) {
+            scannedBarcode = fallbackCode;
+        }
         showPanel('deliberation');
         resetDeliberationUI();
     });

@@ -715,6 +715,10 @@ body {
     text-shadow: 1px 1px 0px #000;
 }
 
+.ai-badge.error-badge {
+    background: #e74c3c;
+}
+
 .ai-result-details {
     font-size: 14px;
     text-align: center;
