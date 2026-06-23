@@ -338,12 +338,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 progressText.innerText = '運命の紋章（コード）を検出中...';
                 
                 // Prepare qr-reader for high-res file scan (override display: none / small clientWidth)
+                qrReaderEl.classList.remove('hidden');
                 qrReaderEl.style.position = 'fixed';
                 qrReaderEl.style.top = '-9999px';
                 qrReaderEl.style.left = '-9999px';
                 qrReaderEl.style.width = '1000px';
                 qrReaderEl.style.height = '1000px';
-                qrReaderEl.style.display = 'block';
                 qrReaderEl.style.visibility = 'hidden';
                 qrReaderEl.style.zIndex = '-100';
                 
@@ -367,12 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 finishAnalysis();
             } finally {
                 // Restore qr-reader styles
+                qrReaderEl.classList.add('hidden');
                 qrReaderEl.style.position = '';
                 qrReaderEl.style.top = '';
                 qrReaderEl.style.left = '';
                 qrReaderEl.style.width = '';
                 qrReaderEl.style.height = '';
-                qrReaderEl.style.display = '';
                 qrReaderEl.style.visibility = '';
                 qrReaderEl.style.zIndex = '';
                 
@@ -487,12 +487,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     progressText.innerText = '運命の紋章（コード）を検出中...';
 
                     // Prepare qr-reader for high-res scan
+                    qrReaderEl.classList.remove('hidden');
                     qrReaderEl.style.position = 'fixed';
                     qrReaderEl.style.top = '-9999px';
                     qrReaderEl.style.left = '-9999px';
                     qrReaderEl.style.width = '1000px';
                     qrReaderEl.style.height = '1000px';
-                    qrReaderEl.style.display = 'block';
                     qrReaderEl.style.visibility = 'hidden';
                     qrReaderEl.style.zIndex = '-100';
 
@@ -516,12 +516,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     finishAnalysis();
                 } finally {
                     // Restore styles
+                    qrReaderEl.classList.add('hidden');
                     qrReaderEl.style.position = '';
                     qrReaderEl.style.top = '';
                     qrReaderEl.style.left = '';
                     qrReaderEl.style.width = '';
                     qrReaderEl.style.height = '';
-                    qrReaderEl.style.display = '';
                     qrReaderEl.style.visibility = '';
                     qrReaderEl.style.zIndex = '';
 
