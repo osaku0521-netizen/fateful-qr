@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=21">
+    <link rel="stylesheet" href="styles.css?v=22">
     <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 </head>
@@ -29,8 +29,15 @@
                     
                     <!-- DOB Input -->
                     <div class="form-group">
-                        <label for="birth-date" class="form-label">生年月日</label>
-                        <input type="date" id="birth-date" class="form-input" required>
+                        <label class="form-label">生年月日</label>
+                        <div class="dob-select-group">
+                            <select id="birth-year" class="form-select" required></select>
+                            <span class="select-label">年</span>
+                            <select id="birth-month" class="form-select" required></select>
+                            <span class="select-label">月</span>
+                            <select id="birth-day" class="form-select" required></select>
+                            <span class="select-label">日</span>
+                        </div>
                     </div>
 
                     <!-- Scan / Camera Area -->
@@ -252,6 +259,6 @@
     </div>
 
     <!-- Application Script -->
-    <script src="app.js?v=21" defer></script>
+    <script src="app.js?v=22" defer></script>
 </body>
 </html>

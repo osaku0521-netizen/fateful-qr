@@ -297,6 +297,39 @@ body {
     border-color: var(--color-mystic-cyan);
 }
 
+.dob-select-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.form-select {
+    background: #0f1118;
+    border: 3px solid #4b5563;
+    border-radius: 6px;
+    color: var(--color-text-bright);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    padding: 10px 12px;
+    outline: none;
+    box-shadow: inset 3px 3px 0px rgba(0, 0, 0, 0.7);
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.form-select:focus {
+    border-color: var(--color-mystic-cyan);
+}
+
+.select-label {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    color: var(--color-text-bright);
+    text-shadow: 1px 1px 0px #000;
+    white-space: nowrap;
+}
+
 /* ==========================================================================
    BUTTONS (3D Pixel-Art Style)
    ========================================================================== */

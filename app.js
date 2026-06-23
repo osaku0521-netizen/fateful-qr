@@ -17,7 +17,18 @@ document.addEventListener('DOMContentLoaded', () => {
         result: document.getElementById('step-result')
     };
 
-    const birthDateInput = document.getElementById('birth-date');
+    const birthYearEl = document.getElementById('birth-year');
+    const birthMonthEl = document.getElementById('birth-month');
+    const birthDayEl = document.getElementById('birth-day');
+
+    function getSelectedBirthDate() {
+        if (!birthYearEl || !birthMonthEl || !birthDayEl) return "1995-01-01";
+        const y = birthYearEl.value;
+        const m = birthMonthEl.value.padStart(2, '0');
+        const d = birthDayEl.value.padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
     const qrReaderEl = document.getElementById('qr-reader');
     const scanPlaceholder = document.getElementById('scan-placeholder');
     const fileUpload = document.getElementById('file-upload');
@@ -232,23 +243,60 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo(0, 0);
     }
 
-    // Set default date picker value to a reasonable default (e.g. 1995-01-01)
-    const dt = new Date();
-    dt.setFullYear(dt.getFullYear() - 25);
-    birthDateInput.value = dt.toISOString().split('T')[0];
+    // Populate Birthdate Selects (Year: 1950-current, Month: 1-12, Day: 1-31)
+    if (birthYearEl && birthMonthEl && birthDayEl) {
+        const currentYear = new Date().getFullYear();
+        for (let y = currentYear; y >= 1950; y--) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === 1995) opt.selected = true; // Default to 1995
+            birthYearEl.appendChild(opt);
+        }
+        for (let m = 1; m <= 12; m++) {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            if (m === 1) opt.selected = true;
+            birthMonthEl.appendChild(opt);
+        }
+        for (let d = 1; d <= 31; d++) {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            if (d === 1) opt.selected = true;
+            birthDayEl.appendChild(opt);
+        }
+
+        // Keep days in month accurate (leap years, etc.)
+        function updateDays() {
+            const year = parseInt(birthYearEl.value);
+            const month = parseInt(birthMonthEl.value);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const currentSelectedDay = parseInt(birthDayEl.value) || 1;
+
+            birthDayEl.innerHTML = '';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                if (d === currentSelectedDay || (d === daysInMonth && currentSelectedDay > daysInMonth)) {
+                    opt.selected = true;
+                }
+                birthDayEl.appendChild(opt);
+            }
+        }
+        birthYearEl.addEventListener('change', updateDays);
+        birthMonthEl.addEventListener('change', updateDays);
+        updateDays();
+    }
 
     // ----------------------------------------------------------------------
     // BARCODE SCANNING CONTROL (html5-qrcode)
     // ----------------------------------------------------------------------
     async function startScanner() {
         initAudio();
-        
-        // Ensure Birthdate is filled
-        if (!birthDateInput.value) {
-            alert("先に生年月日を入力してください。");
-            return;
-        }
-        selectedBirthDate = birthDateInput.value;
+        selectedBirthDate = getSelectedBirthDate();
 
         qrReaderEl.classList.remove('hidden');
         scanPlaceholder.classList.add('hidden');
@@ -274,10 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = {
             fps: 15,
             qrbox: (width, height) => {
-                // A wide rectangular box fits both 1D barcodes and QR codes much better
-                const w = Math.min(width * 0.85, 360);
-                const h = Math.min(height * 0.45, 180);
-                return { width: w, height: h };
+                // A square box fits both QR codes and EAN-13 barcodes comfortably
+                const size = Math.min(width * 0.8, height * 0.8, 280);
+                return { width: size, height: size };
             },
             videoConstraints: {
                 facingMode: "environment",
@@ -309,9 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         fps: 10,
                         qrbox: (width, height) => {
-                            const w = Math.min(width * 0.85, 360);
-                            const h = Math.min(height * 0.45, 180);
-                            return { width: w, height: h };
+                            const size = Math.min(width * 0.8, height * 0.8, 280);
+                            return { width: size, height: size };
                         }
                     },
                     (decodedText, decodedResult) => {
@@ -349,15 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // File Upload Handler
     fileUpload.addEventListener('change', async (e) => {
         initAudio();
-        if (!birthDateInput.value) {
-            alert("先に生年月日を入力してください。");
-            fileUpload.value = '';
-            return;
-        }
-        selectedBirthDate = birthDateInput.value;
+        selectedBirthDate = getSelectedBirthDate();
 
         const file = e.target.files[0];
         if (!file) return;
@@ -401,11 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnMockScan.addEventListener('click', () => {
         initAudio();
-        if (!birthDateInput.value) {
-            alert("先に生年月日を入力してください。");
-            return;
-        }
-        selectedBirthDate = birthDateInput.value;
+        selectedBirthDate = getSelectedBirthDate();
 
         const randomDigits = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         scannedBarcode = "49" + randomDigits.substring(0, 11);
