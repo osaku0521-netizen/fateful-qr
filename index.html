@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fateful QR - 運命のバーコード占い</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css?v=19">
+    <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="app-header">
+            <div class="gold-accent-line"></div>
+            <h1 class="app-title">Fateful QR<br><span class="accent-title">運命のバーコード</span></h1>
+            <p class="app-subtitle">THE FORTUNE-TELLING OF DESTINY BARCODE</p>
+        </header>
+
+        <main class="app-main">
+            <!-- STEP 1: Input DOB and Scan Barcode -->
+            <section id="step-input" class="panel active">
+                <div class="panel-inner">
+                    <p class="panel-desc">あなたの生年月日を入力し、身の回りにあるバーコード（QRコードまたは商品バーコード）を読み取ってください。</p>
+                    
+                    <!-- DOB Input -->
+                    <div class="form-group">
+                        <label for="birth-date" class="form-label">生年月日</label>
+                        <input type="date" id="birth-date" class="form-input" required>
+                    </div>
+
+                    <!-- Scan / Camera Area -->
+                    <div class="scan-area">
+                        <div id="qr-reader" class="hidden"></div>
+                        <div id="scan-placeholder" class="scan-placeholder">
+                            <div class="fateful-aura-badge">Fateful Aura</div>
+                            <div class="placeholder-scroll">
+                                <span class="pixel-icon camera-icon">📷</span>
+                                <p>カメラを起動するか、<br>画像ファイルをアップロードしてください</p>
+                                <span class="pixel-icon file-icon">📄</span>
+                            </div>
+                            <div class="crystal-ball-container">
+                                <div class="crystal-ball">🔮</div>
+                                <div class="crystal-pedestal"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="btn-start-scan" class="btn btn-accent">
+                            <span class="icon">📷</span>カメラを起動してスキャン
+                        </button>
+                        <button id="btn-stop-scan" class="btn btn-secondary hidden">
+                            <span class="icon">⏹️</span>スキャンを停止
+                        </button>
+                        <label for="file-upload" class="btn btn-primary">
+                            <span class="icon">📁</span>バーコード画像をアップロード
+                            <input type="file" id="file-upload" accept="image/*" class="hidden">
+                        </label>
+                        <button id="btn-mock-scan" class="btn btn-secondary">
+                            <span class="icon">✨</span>デモ用コードで占う（カメラなし）
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 2: Analyzing / Scanning -->
+            <section id="step-analyze" class="panel">
+                <div class="panel-inner">
+                    <h2 class="section-title">宿命の糸を解析中</h2>
+                    <div class="analyze-box">
+                        <div id="scanned-preview-container" class="preview-container">
+                            <!-- Scanned barcode image or mock graphic -->
+                            <div class="mock-barcode-graphic">
+                                <div class="barcode-lines"></div>
+                                <div class="barcode-overlay-text">FATE ALIGNED</div>
+                            </div>
+                        </div>
+                        <div class="scanner-line"></div>
+                        <div class="scan-overlay"></div>
+                    </div>
+                    
+                    <div class="analyze-status">
+                        <p id="analyze-text">バーコードデータを解析中...</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="analyze-progress"></div>
+                        </div>
+                    </div>
+
+                    <div id="analyze-result-panel" class="hidden">
+                        <div class="ai-badge">解析完了</div>
+                        <p class="ai-result-details" id="analyze-result-details"></p>
+                        
+                        <div class="btn-group">
+                            <button id="btn-proceed-judge" class="btn btn-accent">
+                                運命の占い師団を招集する
+                            </button>
+                            <button id="btn-retry-input" class="btn btn-secondary">
+                                やり直す
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STEP 3: Deliberation (占い師団の審議) -->
+            <section id="step-deliberation" class="panel">
+                <div class="panel-inner">
+                    <h2 class="section-title text-gold">運命の占い師団 審議</h2>
+                    <div class="deliberation-status">
+                        <div class="status-badge" id="deliberation-badge">審議前</div>
+                    </div>
+
+                    <!-- 5 Fortunetellers Grid -->
+                    <div class="judges-grid">
+                        <!-- Shaman (Ancient) -->
+                        <div class="judge-card" id="judge-0">
+                            <div class="avatar-container">
+                                <div class="avatar avatar-shaman"></div>
+                            </div>
+                            <div class="judge-info">
+                                <h3 class="judge-name">古代のシャーマン</h3>
+                                <p class="judge-title">精霊と自然の交信者</p>
+                            </div>
+                            <div class="speech-bubble">
+                                <p class="speech-text">……</p>
+                            </div>
+                        </div>
+
+                        <!-- Witch (Medieval) -->
+                        <div class="judge-card" id="judge-1">
+                            <div class="avatar-container">
+                                <div class="avatar avatar-witch"></div>
+                            </div>
+                            <div class="judge-info">
+                                <h3 class="judge-name">中世の魔女</h3>
+                                <p class="judge-title">見習い魔法調合師</p>
+                            </div>
+                            <div class="speech-bubble">
+                                <p class="speech-text">……</p>
+                            </div>
+                        </div>
+
+                        <!-- Shinto Priest (Japanese) -->
+                        <div class="judge-card" id="judge-2">
+                            <div class="avatar-container">
+                                <div class="avatar avatar-priest"></div>
+                            </div>
+                            <div class="judge-info">
+                                <h3 class="judge-name">日本の神主</h3>
+                                <p class="judge-title">八百万の神のメッセンジャー</p>
+                            </div>
+                            <div class="speech-bubble">
+                                <p class="speech-text">……</p>
+                            </div>
+                        </div>
+
+                        <!-- Consultant (Modern) -->
+                        <div class="judge-card" id="judge-3">
+                            <div class="avatar-container">
+                                <div class="avatar avatar-consultant"></div>
+                            </div>
+                            <div class="judge-info">
+                                <h3 class="judge-name">現代のコンサルタント</h3>
+                                <p class="judge-title">データとトレンドの解析屋</p>
+                            </div>
+                            <div class="speech-bubble">
+                                <p class="speech-text">……</p>
+                            </div>
+                        </div>
+
+                        <!-- Robot (Future) -->
+                        <div class="judge-card" id="judge-4">
+                            <div class="avatar-container">
+                                <div class="avatar avatar-robot"></div>
+                            </div>
+                            <div class="judge-info">
+                                <h3 class="judge-name">未来のロボット</h3>
+                                <p class="judge-title">時空超越AIモジュール</p>
+                            </div>
+                            <div class="speech-bubble">
+                                <p class="speech-text">……</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="btn-start-deliberate" class="btn btn-accent btn-large">審議を開始する</button>
+                    <button id="btn-go-result" class="btn btn-accent btn-large hidden">最終鑑定結果を確認する</button>
+                </div>
+            </section>
+
+            <!-- STEP 4: Final Result -->
+            <section id="step-result" class="panel">
+                <div class="panel-inner">
+                    <h2 class="section-title text-gold">最終運勢鑑定</h2>
+                    
+                    <div class="result-display-box">
+                        <div class="verdict-banner" id="verdict-banner">
+                            <!-- Verdict and stamp will be dynamically injected -->
+                        </div>
+                        
+                        <!-- Chairperson / Overall General Summary -->
+                        <div class="chairperson-summary-box" id="chairperson-summary-box">
+                             <div class="chairperson-header">
+                                 <div class="chairperson-avatar" id="chairperson-avatar"></div>
+                                 <div>
+                                     <h4 class="chairperson-name" id="chairperson-name">運命の代弁者</h4>
+                                     <p class="chairperson-role">本日の託宣の総括</p>
+                                 </div>
+                             </div>
+                             <div class="chairperson-bubble">
+                                 <p id="chairperson-comment">……</p>
+                             </div>
+                         </div>
+
+                         <div class="result-details-box hidden">
+                             <p class="tally-count" id="tally-count"></p>
+                         </div>
+                    </div>
+
+                    <!-- Certificate Preview -->
+                    <div class="certificate-section">
+                        <h3>運命の鑑定書</h3>
+                        <p class="cert-desc">保存した画像はSNSでシェアできます</p>
+                        <div class="cert-preview-container">
+                            <canvas id="cert-canvas" width="600" height="850" class="cert-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="btn-download-cert" class="btn btn-primary">
+                            <span class="icon">💾</span>鑑定書を保存
+                        </button>
+                        <button id="btn-share-sns" class="btn btn-accent">
+                            <span class="icon">🐦</span>結果をSNSでシェア
+                        </button>
+                        <button id="btn-restart" class="btn btn-secondary">
+                            もう一度占う
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 Fateful QR 運命の占い師団 All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js?v=19" defer></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# Temporary test scripts
+temp_test.js
+test_deliberation.js
+fix_app.js
+
+# OS files
+.DS_Store
+Thumbs.db

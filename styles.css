@@ -1,0 +1,1157 @@
+/* ==========================================================================
+   FATEFUL QR - RETRO PIXEL-ART RPG DESIGN SYSTEM
+   ========================================================================== */
+:root {
+    --bg-dark: #0f111a;
+    --bg-panel: rgba(24, 28, 43, 0.95);
+    --bg-panel-light: rgba(38, 44, 68, 0.95);
+    
+    /* Pixel RPG Accents */
+    --color-mystic-purple: #bd5dff;
+    --color-mystic-cyan: #00f0ff;
+    --color-mystic-pink: #ff2a85;
+    
+    --color-gold-light: #fff5cc;
+    --color-gold: #f1c40f;
+    --color-gold-dark: #d4af37;
+    
+    /* Fortune States */
+    --color-daikichi: #ff2a85;  
+    --color-kichi: #00f0ff;     
+    --color-kyo: #9b59b6;       
+    
+    --color-text-bright: #ffffff;
+    --color-text-normal: #e2d9f3;
+    --color-text-muted: #8e7ea5;
+    
+    /* Standard font is now DotGothic16 for retro game feeling */
+    --font-heading: 'DotGothic16', 'Shippori Mincho', sans-serif;
+    --font-sans: 'DotGothic16', 'Outfit', sans-serif;
+    
+    --shadow-soft: 0 8px 0px rgba(0, 0, 0, 0.4);
+    --shadow-mystic: 0 0 15px rgba(189, 93, 255, 0.2);
+    
+    --border-pixel-silver: 4px solid #7f8c8d;
+    --border-pixel-gold: 4px solid #f1c40f;
+}
+
+/* ==========================================================================
+   RESET & BASE STYLES
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    image-rendering: pixelated; /* Ensure crisp pixel scaling */
+}
+
+body {
+    background-color: #0b0c10;
+    color: var(--color-text-normal);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0c10;
+}
+::-webkit-scrollbar-thumb {
+    background: #7f8c8d;
+    border: 2px solid #0b0c10;
+}
+
+/* ==========================================================================
+   LAYOUT WRAPPER (RPG Screen Frame)
+   ========================================================================== */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 500px; /* Mobile focused */
+    margin: 0 auto;
+    background: #141824;
+    background-image: 
+        linear-gradient(rgba(10, 12, 18, 0.7) 0%, rgba(10, 12, 18, 0.95) 100%),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px);
+    box-shadow: 0 0 50px rgba(0,0,0,0.9);
+    position: relative;
+    border-left: 6px double #4b5563;
+    border-right: 6px double #4b5563;
+    overflow: hidden;
+}
+
+/* Star/Dust Sparkles (Retro RPG style) */
+.app-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(#fff, rgba(255,255,255,0.3) 1px, transparent 8px),
+        radial-gradient(#fff, rgba(255,255,255,0.2) 2px, transparent 12px);
+    background-size: 200px 200px, 310px 310px;
+    background-position: 0 0, 90px 110px;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Header: Wooden Signboard style */
+.app-header {
+    text-align: center;
+    padding: 16px;
+    margin: 16px 16px 4px;
+    background: linear-gradient(135deg, #a05a2c 0%, #783e1a 100%);
+    border: 4px solid #4a2306;
+    border-radius: 8px;
+    box-shadow: 
+        inset 0 4px 0 #c27f4d,
+        inset 0 -4px 0 #562704,
+        0 4px 8px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 5;
+}
+
+.gold-accent-line {
+    display: none; /* Replaced by signboard decoration */
+}
+
+
+
+.app-title {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    color: var(--color-text-bright);
+    letter-spacing: 1px;
+    font-weight: 800;
+    margin: 0;
+    padding: 0;
+}
+
+.accent-title {
+    display: inline-block;
+    color: #f1c40f; /* High-contrast golden yellow for legibility */
+    font-size: 30px;
+    font-weight: 900;
+    text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000,
+        -2px  0px 0 #000,
+         2px  0px 0 #000,
+         0px -2px 0 #000,
+         0px  2px 0 #000,
+         2px  3px 0px rgba(0,0,0,0.8);
+}
+
+.app-subtitle {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: #00f0ff;
+    margin-top: 4px;
+    font-weight: 700;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         1px  1.5px 0px rgba(0,0,0,0.8);
+}
+
+/* Footer */
+.app-footer {
+    text-align: center;
+    padding: 20px 16px;
+    font-size: 10px;
+    color: var(--color-text-muted);
+    border-top: var(--border-mystic-faint);
+    margin-top: auto;
+    z-index: 2;
+}
+
+/* ==========================================================================
+   PANELS & CONTAINERS (RPG Window frames)
+   ========================================================================== */
+.app-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 16px;
+    z-index: 2;
+}
+
+.panel {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(10px);
+}
+
+.panel.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.panel-inner {
+    background: var(--bg-panel);
+    border: 4px double #5a647c;
+    border-radius: 8px;
+    padding: 20px 16px;
+    box-shadow: 0 8px 0px rgba(0, 0, 0, 0.6);
+    position: relative;
+}
+
+/* Scroll (Papyrus scroll) for descriptions */
+.panel-desc {
+    text-align: center;
+    font-size: 13.5px;
+    color: #422d19;
+    background: #eedcb3;
+    border-top: 3px solid #6b4c2b;
+    border-bottom: 3px solid #6b4c2b;
+    padding: 12px 18px;
+    margin: 4px 10px 24px;
+    position: relative;
+    font-weight: 700;
+    text-shadow: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Wood roll axes for the scroll */
+.panel-desc::before,
+.panel-desc::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 6px;
+    background: linear-gradient(90deg, #6b4c2b, #a0744a, #6b4c2b);
+    border: 2px solid #422d19;
+    border-radius: 3px;
+}
+.panel-desc::before {
+    left: -8px;
+}
+.panel-desc::after {
+    right: -8px;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    text-align: center;
+    color: var(--color-text-bright);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.text-gold {
+    color: #00f0ff;
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* ==========================================================================
+   FORM INPUT STYLES (Inset Steel Frame)
+   ========================================================================== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.form-label {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    color: var(--color-text-bright);
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.form-input {
+    background: #0f1118;
+    border: 3px solid #4b5563;
+    border-radius: 6px;
+    color: var(--color-text-bright);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    padding: 10px 12px;
+    outline: none;
+    box-shadow: inset 3px 3px 0px rgba(0, 0, 0, 0.7);
+    position: relative;
+}
+
+.form-input:focus {
+    border-color: var(--color-mystic-cyan);
+}
+
+/* ==========================================================================
+   BUTTONS (3D Pixel-Art Style)
+   ========================================================================== */
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+    width: 100%;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    position: relative;
+    /* 3D Border: Light on top-left, dark on bottom-right */
+    border-top: 4px solid #9ca3af;
+    border-left: 4px solid #9ca3af;
+    border-right: 4px solid #1f2937;
+    border-bottom: 4px solid #1f2937;
+    box-shadow: 0 6px 0px rgba(0, 0, 0, 0.5);
+    transition: none; /* Instant feedback */
+}
+
+.btn:active {
+    border-top: 4px solid #1f2937;
+    border-left: 4px solid #1f2937;
+    border-right: 4px solid #9ca3af;
+    border-bottom: 4px solid #9ca3af;
+    transform: translateY(4px);
+    box-shadow: 0 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+.btn-primary, .btn-secondary {
+    background: #2f3542;
+    color: #f1f2f6;
+    border-top-color: #747d8c;
+    border-left-color: #747d8c;
+    border-right-color: #1e272e;
+    border-bottom-color: #1e272e;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.btn-primary:active, .btn-secondary:active {
+    background: #232731;
+}
+
+.btn-accent {
+    background: linear-gradient(90deg, #00f0ff 0%, #ff2a85 100%);
+    color: #ffffff;
+    border-top-color: #a5f3fc;
+    border-left-color: #a5f3fc;
+    border-right-color: #881337;
+    border-bottom-color: #881337;
+    text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+}
+
+.btn-accent:active {
+    background: linear-gradient(90deg, #0891b2 0%, #be123c 100%);
+}
+
+.btn-large {
+    padding: 16px 20px;
+    font-size: 16px;
+    font-family: var(--font-heading);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   SCANNING / CAMERA AREA
+   ========================================================================== */
+.scan-area {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #0f1118;
+    border: 4px solid #5a647c;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+}
+
+/* Inner metal border details */
+.scan-area::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border: 2px solid #374151;
+    pointer-events: none;
+    z-index: 4;
+}
+
+#qr-reader {
+    width: 100%;
+    height: 100%;
+    border: none !important;
+    z-index: 3;
+}
+
+#qr-reader video {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.scan-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    padding: 12px 16px;
+    position: relative;
+    z-index: 2;
+}
+
+.fateful-aura-badge {
+    background: #e84393;
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 900;
+    padding: 4px 14px;
+    border: 2px solid #000;
+    border-radius: 4px;
+    box-shadow: 2px 2px 0px #000;
+    margin-top: 4px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.placeholder-scroll {
+    background: #eedcb3;
+    border: 3px solid #6b4c2b;
+    border-radius: 4px;
+    padding: 8px 12px;
+    width: 85%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.5);
+}
+
+.placeholder-scroll p {
+    color: #422d19;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.pixel-icon {
+    font-size: 20px;
+    filter: drop-shadow(1px 1px 0px #000);
+}
+
+.crystal-ball-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    bottom: -12px; /* Align pedestal at bottom */
+}
+
+.crystal-ball {
+    font-size: 52px;
+    line-height: 1;
+    filter: drop-shadow(0 0 15px rgba(189, 93, 255, 0.8));
+    animation: crystal-bounce 2s ease-in-out infinite alternate;
+}
+
+.crystal-pedestal {
+    width: 46px;
+    height: 12px;
+    background: #8c5d3f;
+    border: 2px solid #4a2711;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 
+        inset 0 2px 0 #b37f5d,
+        0 2px 0px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.crystal-pedestal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 34px;
+    height: 2px;
+    background: #f1c40f; /* Gold rim */
+}
+
+@keyframes crystal-bounce {
+    0% { transform: translateY(0); filter: drop-shadow(0 0 8px rgba(189, 93, 255, 0.7)); }
+    100% { transform: translateY(-8px); filter: drop-shadow(0 0 18px rgba(189, 93, 255, 0.95)); }
+}
+
+/* ==========================================================================
+   STEP 2: SCANNING / ANALYZING STATE (RPG UI)
+   ========================================================================== */
+.analyze-box {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #111116;
+    border: 4px solid #5a647c;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
+}
+
+.analyze-box::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border: 2px solid #374151;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.preview-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mock Barcode Graphic */
+.mock-barcode-graphic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #101424 0%, #080a12 100%);
+    position: relative;
+}
+
+/* Magic circle background vector behind barcode */
+.mock-barcode-graphic::before {
+    content: '';
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px double rgba(189, 93, 255, 0.2);
+    animation: spin 20s linear infinite;
+    pointer-events: none;
+}
+
+.barcode-lines {
+    width: 65%;
+    height: 30%;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--color-mystic-cyan),
+        var(--color-mystic-cyan) 4px,
+        transparent 4px,
+        transparent 10px,
+        var(--color-mystic-purple) 10px,
+        var(--color-mystic-purple) 16px,
+        transparent 16px,
+        transparent 20px
+    );
+    margin-bottom: 20px;
+    opacity: 0.85;
+    filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.4));
+    z-index: 2;
+}
+
+.barcode-overlay-text {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    letter-spacing: 5px;
+    color: var(--color-mystic-cyan);
+    font-weight: 800;
+    z-index: 2;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.scanner-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(to right, transparent, var(--color-mystic-cyan), var(--color-mystic-purple), transparent);
+    box-shadow: 0 0 10px var(--color-mystic-cyan);
+    animation: scan 2.2s linear infinite;
+    z-index: 3;
+}
+
+.scan-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(189, 93, 255, 0.05);
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes scan {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+.analyze-status {
+    margin-top: 18px;
+}
+
+#analyze-text {
+    font-size: 13.5px;
+    color: var(--color-text-normal);
+    margin-bottom: 8px;
+    text-align: center;
+    font-family: var(--font-heading);
+    text-shadow: 1px 1px 0px #000;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(189, 93, 255, 0.15);
+    border-radius: 3px;
+    border: 1px solid #374151;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-mystic-cyan), var(--color-mystic-purple));
+    transition: width 0.1s linear;
+}
+
+.ai-badge {
+    background: #e84393;
+    color: #fff;
+    border: 2px solid #000;
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 14px auto;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    box-shadow: 2px 2px 0px #000;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.ai-result-details {
+    font-size: 14px;
+    text-align: center;
+    color: var(--color-text-normal);
+    margin-bottom: 16px;
+    line-height: 1.5;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* ==========================================================================
+   STEP 3: DELIBERATION (RPG Debate Windows)
+   ========================================================================== */
+.deliberation-status {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 22px;
+}
+
+.status-badge {
+    background: #131722;
+    color: var(--color-mystic-cyan);
+    border: 3px solid #4b5563;
+    padding: 6px 20px;
+    border-radius: 4px;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    letter-spacing: 1px;
+    box-shadow: inset 3px 3px 0px rgba(0, 0, 0, 0.7);
+}
+
+.pulse {
+    animation: badge-pulse 1.5s infinite alternate;
+}
+
+@keyframes badge-pulse {
+    from { opacity: 0.75; }
+    to { opacity: 1; box-shadow: inset 3px 3px 0px rgba(0, 0, 0, 0.7), 0 0 10px rgba(0, 240, 255, 0.3); }
+}
+
+.judges-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.judge-card {
+    background: var(--bg-panel-light);
+    border: 3px solid #4b5563;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5);
+    transition: none;
+}
+
+.judge-card.active-speaker {
+    border-color: var(--color-mystic-cyan);
+    box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.avatar-container {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--color-mystic-purple);
+    background: #020104;
+    flex-shrink: 0;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    background-image: url('assets/members.jpg');
+    background-repeat: no-repeat;
+    background-size: 500% auto; /* 5 columns of sprites */
+}
+
+/* Sprite coordinates corresponding to character centers */
+.avatar-shaman { background-position: 1% 45%; }
+.avatar-witch { background-position: 25.5% 45%; }
+.avatar-priest { background-position: 50% 45%; }
+.avatar-consultant { background-position: 74.5% 45%; }
+.avatar-robot { background-position: 99% 45%; }
+
+.judge-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: calc(100% - 72px); /* Prevent layout overflow */
+}
+
+.judge-name {
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    color: var(--color-text-bright);
+    font-weight: 600;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.judge-title {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* Dynamic Speech Bubbles (RPG Text Window) */
+.speech-bubble {
+    position: absolute;
+    top: 50%;
+    left: 80px;
+    right: 14px;
+    transform: translateY(-50%);
+    background: #131722;
+    border: 3px solid var(--color-mystic-purple);
+    border-radius: 6px;
+    padding: 8px 12px;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.speech-bubble.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Speech Bubble Tail (Triangle pointing to avatar) */
+.speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 8px 8px 8px 0;
+    border-style: solid;
+    border-color: transparent var(--color-mystic-purple) transparent transparent;
+    display: block;
+    width: 0;
+    z-index: 11;
+    transition: border-color 0.3s ease;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 7px 7px 7px 0;
+    border-style: solid;
+    border-color: transparent #1c0e2b transparent transparent;
+    display: block;
+    width: 0;
+    z-index: 12;
+}
+
+/* Colors for tails based on verdicts */
+.speech-bubble.verdict-daikichi::before {
+    border-right-color: var(--color-daikichi);
+}
+.speech-bubble.verdict-kichi::before {
+    border-right-color: var(--color-kichi);
+}
+.speech-bubble.verdict-kyo::before {
+    border-right-color: var(--color-kyo);
+}
+
+/* Thinking Bubble Tail (Same triangle but cyan for thinking state) */
+.speech-bubble.thinking-bubble::before {
+    border-right-color: var(--color-mystic-cyan);
+}
+
+.speech-text {
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--color-text-normal);
+}
+
+.thinking-bubble {
+    background: #131722;
+    border-color: var(--color-mystic-cyan);
+    border-style: dashed;
+}
+
+.thinking-bubble .speech-text {
+    color: var(--color-mystic-cyan);
+    font-style: italic;
+}
+
+/* Verdict Colors for bubbles (RPG Window Borders) */
+.speech-bubble.verdict-daikichi {
+    border-color: var(--color-daikichi);
+    background: #131722;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.6), 0 0 10px rgba(255, 42, 133, 0.2);
+}
+.speech-bubble.verdict-daikichi::before {
+    border-right-color: var(--color-daikichi);
+}
+.speech-bubble.verdict-daikichi .speech-text {
+    color: #ffb8d9;
+}
+
+.speech-bubble.verdict-kichi {
+    border-color: var(--color-kichi);
+    background: #131722;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.6), 0 0 10px rgba(0, 240, 255, 0.2);
+}
+.speech-bubble.verdict-kichi::before {
+    border-right-color: var(--color-kichi);
+}
+.speech-bubble.verdict-kichi .speech-text {
+    color: #bffffc;
+}
+
+.speech-bubble.verdict-kyo {
+    border-color: var(--color-kyo);
+    background: #131722;
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.6), 0 0 10px rgba(155, 89, 182, 0.2);
+}
+.speech-bubble.verdict-kyo::before {
+    border-right-color: var(--color-kyo);
+}
+.speech-bubble.verdict-kyo .speech-text {
+    color: #d8b4e2;
+}
+
+/* ==========================================================================
+   STEP 4: FINAL RESULT PRESENTATION (RPG UI)
+   ========================================================================== */
+.result-display-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.verdict-banner {
+    position: relative;
+    width: 100%;
+    min-height: 210px; 
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: flex-end; 
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    overflow: visible;
+}
+
+.verdict-text {
+    font-family: var(--font-heading);
+    font-size: 15.5px; 
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 1px;
+    z-index: 2;
+    padding: 12px 16px;
+    border-radius: 6px;
+    text-shadow: 2px 2px 0px #000;
+    width: 100%;
+    box-sizing: border-box;
+    border: 4px double #5a647c;
+    background: #131722;
+}
+
+.verdict-text.daikichi {
+    color: var(--color-daikichi);
+    border-color: var(--color-daikichi);
+    box-shadow: 0 4px 0px rgba(0,0,0,0.5), 0 0 15px rgba(255, 42, 133, 0.35);
+}
+.verdict-text.kichi {
+    color: var(--color-kichi);
+    border-color: var(--color-kichi);
+    box-shadow: 0 4px 0px rgba(0,0,0,0.5), 0 0 15px rgba(0, 240, 255, 0.35);
+}
+.verdict-text.kyo {
+    color: var(--color-kyo);
+    border-color: var(--color-kyo);
+    box-shadow: 0 4px 0px rgba(0,0,0,0.5), 0 0 15px rgba(155, 89, 182, 0.35);
+}
+
+.stamp {
+    position: absolute;
+    top: 5px; /* Positioned in the middle between the title and the banner */
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 2px dashed transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 18px; /* Slightly smaller text for 110px container */
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: scale(3.5) rotate(45deg);
+    transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.15s ease;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Inner double ring for stamp */
+.stamp::before {
+    content: '';
+    position: absolute;
+    width: 94px; /* Scaled down for 110px stamp */
+    height: 94px;
+    border-radius: 50%;
+    border: 1px double inherit;
+}
+
+.stamp.stamped {
+    opacity: 0.85;
+    transform: scale(1) rotate(-10deg);
+}
+
+.stamp-daikichi {
+    border-color: rgba(255, 42, 133, 0.85);
+    color: rgba(255, 42, 133, 0.85);
+    box-shadow: inset 0 0 12px rgba(255, 42, 133, 0.2), 0 0 20px rgba(255, 42, 133, 0.3);
+    background: rgba(255, 42, 133, 0.05);
+}
+
+.stamp-kichi {
+    border-color: rgba(0, 240, 255, 0.85);
+    color: rgba(0, 240, 255, 0.85);
+    box-shadow: inset 0 0 12px rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.3);
+    background: rgba(0, 240, 255, 0.05);
+}
+
+.stamp-kyo {
+    border-color: rgba(186, 104, 200, 0.85);
+    color: rgba(186, 104, 200, 0.85);
+    box-shadow: inset 0 0 12px rgba(123, 31, 162, 0.2), 0 0 20px rgba(123, 31, 162, 0.2);
+    background: rgba(123, 31, 162, 0.05);
+}
+
+/* Screen shake for high impact stamp drop */
+.shake-screen {
+    animation: screen-shake 0.45s ease-out;
+}
+
+@keyframes screen-shake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-4px, 3px) rotate(-0.6deg); }
+    20% { transform: translate(4px, -3px) rotate(0.6deg); }
+    30% { transform: translate(-4px, -3px) rotate(-0.6deg); }
+    40% { transform: translate(4px, 3px) rotate(0.6deg); }
+    55% { transform: translate(-2px, -1px) rotate(-0.3deg); }
+    70% { transform: translate(2px, 1px) rotate(0.3deg); }
+    85% { transform: translate(-1px, 0) rotate(0deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Chairperson Summary (RPG Dialog Box) */
+.chairperson-summary-box {
+    width: 100%;
+    background: #181c26;
+    border: 3px solid #4b5563;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+.chairperson-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.chairperson-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--color-mystic-purple);
+    overflow: hidden;
+    background-image: url('assets/members.jpg');
+    background-repeat: no-repeat;
+    background-size: 500% auto;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.chairperson-name {
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    color: var(--color-mystic-cyan);
+    text-shadow: 1px 1px 0px #000;
+}
+
+.chairperson-role {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    text-shadow: 1px 1px 0px #000;
+}
+
+.chairperson-bubble {
+    background: #131722;
+    border: 3px solid #5a647c;
+    border-radius: 6px;
+    padding: 12px 14px;
+    position: relative;
+    box-shadow: inset 3px 3px 0px rgba(0, 0, 0, 0.6);
+}
+
+.chairperson-bubble p {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--color-text-normal);
+}
+
+.result-details-box {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.tally-count {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    letter-spacing: 1.5px;
+}
+
+/* ==========================================================================
+   CERTIFICATE SECTION (RPG Certificate Frame)
+   ========================================================================== */
+.certificate-section {
+    width: 100%;
+    border-top: 2px dashed #4b5563;
+    padding-top: 24px;
+    margin-top: 24px;
+    text-align: center;
+}
+
+.certificate-section h3 {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--color-mystic-cyan);
+    margin-bottom: 6px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+.cert-desc {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    margin-bottom: 16px;
+}
+
+.cert-preview-container {
+    width: 100%;
+    background: #0b0c10;
+    border: 3px solid #5a647c;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 0px rgba(0, 0, 0, 0.5);
+    aspect-ratio: 600/850;
+}
+
+.cert-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
