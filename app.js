@@ -315,6 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     Html5QrcodeSupportedFormats.UPC_E,
                     Html5QrcodeSupportedFormats.ITF
                 ],
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: false
+                },
                 verbose: false
             });
         }
