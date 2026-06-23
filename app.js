@@ -358,22 +358,37 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (!html5Qrcode) return;
 
-            // Try to apply zoom and focusMode in a single constraints block to avoid overriding
+            let capabilities = {};
             try {
-                await html5Qrcode.applyVideoConstraints({
-                    focusMode: "continuous",
-                    advanced: [{ zoom: 1.3 }]
-                });
-                console.log("Applied focusMode continuous and zoom 1.3");
-            } catch (e) {
-                try {
-                    await html5Qrcode.applyVideoConstraints({
-                        advanced: [{ zoom: 1.3 }]
-                    });
-                    console.log("Applied zoom 1.3 only");
-                } catch (e2) {
-                    console.warn("Could not apply zoom or focusMode constraints:", e2);
-                }
+                capabilities = html5Qrcode.getRunningTrackCapabilities() || {};
+            } catch (capErr) {
+                console.warn("Failed to get track capabilities:", capErr);
+            }
+
+            const constraints = {};
+            let hasAdvanced = false;
+            const advancedConstraint = {};
+
+            // Apply minor zoom (e.g. 1.3x) if supported to help the camera focus on the code
+            if (capabilities.zoom) {
+                const idealZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.3));
+                advancedConstraint.zoom = idealZoom;
+                hasAdvanced = true;
+                console.log(`Setting zoom to: ${idealZoom}`);
+            }
+
+            if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
+                constraints.focusMode = "continuous";
+                console.log("Setting focusMode to continuous");
+            }
+
+            if (hasAdvanced) {
+                constraints.advanced = [advancedConstraint];
+            }
+
+            if (Object.keys(constraints).length > 0) {
+                await html5Qrcode.applyVideoConstraints(constraints);
+                console.log("Applied dynamic video constraints successfully:", constraints);
             }
         } catch (constrErr) {
             console.warn("Could not apply dynamic video constraints:", constrErr);
@@ -583,18 +598,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const customOverlay = document.getElementById('scan-overlay-custom');
             if (customOverlay) customOverlay.classList.remove('hidden');
             
-            // Build config without facingMode to avoid conflicts when starting by cameraId
+            // Build config without videoConstraints to avoid conflicts when starting by cameraId
             const config = {
                 fps: 15,
                 aspectRatio: 1.333333,
                 useBarCodeDetectorIfSupported: false,
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: false
-                },
-                videoConstraints: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    aspectRatio: { ideal: 1.333333 }
                 }
             };
             
@@ -608,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 (errorMessage) => {}
             );
-            await applyDynamicCameraConstraints(); // Applies zoom & continuous focus
+            await applyDynamicCameraConstraints(); // Applies zoom & continuous focus safely
             if (cameraDevices.length > 1) {
                 btnSwitchCamera.classList.remove('hidden');
             }
