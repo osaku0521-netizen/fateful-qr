@@ -305,16 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!html5Qrcode) {
             html5Qrcode = new Html5Qrcode("qr-reader", {
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.UPC_E,
-                    Html5QrcodeSupportedFormats.ITF
-                ],
                 useBarCodeDetectorIfSupported: false,
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: false
@@ -330,12 +320,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 const size = Math.min(width * 0.8, height * 0.8, 280);
                 return { width: size, height: size };
             },
+            aspectRatio: 1.333333,
+            useBarCodeDetectorIfSupported: false,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: false
+            },
             videoConstraints: {
                 facingMode: "environment",
                 width: { ideal: 1280 },
-                height: { ideal: 720 }
+                height: { ideal: 720 },
+                aspectRatio: { ideal: 1.333333 }
             }
         };
+
+        async function applyDynamicCameraConstraints() {
+            try {
+                if (!html5Qrcode) return;
+                const capabilities = html5Qrcode.getRunningTrackCapabilities();
+                const settings = html5Qrcode.getRunningTrackSettings();
+                console.log("Camera capabilities:", capabilities);
+                console.log("Camera settings:", settings);
+
+                const constraints = {};
+                let hasAdvanced = false;
+                const advancedConstraint = {};
+
+                // Apply minor zoom (e.g. 1.2x) if supported to help the camera focus on the code
+                if (capabilities.zoom) {
+                    const idealZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.2));
+                    advancedConstraint.zoom = idealZoom;
+                    hasAdvanced = true;
+                    console.log(`Setting zoom to: ${idealZoom}`);
+                }
+
+                if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
+                    constraints.focusMode = "continuous";
+                    console.log("Setting focusMode to continuous");
+                }
+
+                if (hasAdvanced) {
+                    constraints.advanced = [advancedConstraint];
+                }
+
+                if (Object.keys(constraints).length > 0) {
+                    await html5Qrcode.applyVideoConstraints(constraints);
+                    console.log("Applied dynamic video constraints successfully");
+                }
+            } catch (constrErr) {
+                console.warn("Could not apply dynamic video constraints:", constrErr);
+            }
+        }
 
         try {
             // Attempt start with HD video constraints
@@ -351,6 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Ignore errors during continuous scan frames
                 }
             );
+            await applyDynamicCameraConstraints();
         } catch (err) {
             console.warn("First camera start failed, retrying with fallback constraints:", err);
             try {
@@ -359,9 +394,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     { facingMode: "environment" },
                     {
                         fps: 10,
+                        aspectRatio: 1.333333,
+                        useBarCodeDetectorIfSupported: false,
+                        experimentalFeatures: {
+                            useBarCodeDetectorIfSupported: false
+                        },
                         qrbox: (width, height) => {
                             const size = Math.min(width * 0.8, height * 0.8, 280);
                             return { width: size, height: size };
+                        },
+                        videoConstraints: {
+                            facingMode: "environment",
+                            aspectRatio: { ideal: 1.333333 }
                         }
                     },
                     (decodedText, decodedResult) => {
@@ -373,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Ignore errors
                     }
                 );
+                await applyDynamicCameraConstraints();
             } catch (fallbackErr) {
                 console.error("Camera scan start failed completely:", fallbackErr);
                 alert("カメラの起動に失敗しました。カメラの使用許可設定を確認するか、ファイルアップロードをご利用ください。");
