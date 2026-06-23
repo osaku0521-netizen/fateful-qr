@@ -336,8 +336,18 @@ document.addEventListener('DOMContentLoaded', () => {
         async function applyDynamicCameraConstraints() {
             try {
                 if (!html5Qrcode) return;
-                const capabilities = html5Qrcode.getRunningTrackCapabilities();
+
+                // Set the container aspect ratio dynamically to match the running stream
                 const settings = html5Qrcode.getRunningTrackSettings();
+                if (settings && settings.width && settings.height) {
+                    const scanArea = document.querySelector('.scan-area');
+                    if (scanArea) {
+                        scanArea.style.aspectRatio = `${settings.width} / ${settings.height}`;
+                        console.log(`Updated scan-area aspect-ratio to: ${settings.width} / ${settings.height}`);
+                    }
+                }
+
+                const capabilities = html5Qrcode.getRunningTrackCapabilities();
                 console.log("Camera capabilities:", capabilities);
                 console.log("Camera settings:", settings);
 
@@ -367,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log("Applied dynamic video constraints successfully");
                 }
             } catch (constrErr) {
-                console.warn("Could not apply dynamic video constraints:", constrErr);
+                console.warn("Could not apply dynamic video constraints/aspect ratio:", constrErr);
             }
         }
 
@@ -427,6 +437,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopScanner() {
+        // Reset aspect ratio of scan-area to default 4/3
+        const scanArea = document.querySelector('.scan-area');
+        if (scanArea) {
+            scanArea.style.aspectRatio = '4/3';
+        }
+
         if (html5Qrcode && html5Qrcode.isScanning) {
             html5Qrcode.stop().then(() => {
                 qrReaderEl.classList.add('hidden');
