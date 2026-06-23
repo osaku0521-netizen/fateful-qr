@@ -300,6 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
             useBarCodeDetectorIfSupported: false,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: false
+            },
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 640 },
+                height: { ideal: 480 }
             }
         };
     }
