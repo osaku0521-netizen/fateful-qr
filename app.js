@@ -299,7 +299,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const label = (device.label || "").toLowerCase();
         
         // フロントカメラは除外 (最優先度: 0)
-        if (label.includes("front") || label.includes("user") || label.includes("前面") || label.includes("フロント") || label.includes("インカメラ") || label.includes("内カメラ")) {
+        if (label.includes("front") || 
+            label.includes("user") || 
+            label.includes("前面") || 
+            label.includes("フロント") || 
+            label.includes("インカメラ") || 
+            label.includes("内カメラ") ||
+            label.includes("truedepth") ||
+            label.includes("true-depth") ||
+            label.includes("selfie") ||
+            label.includes("face")) {
             return 0;
         }
         
@@ -376,10 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
             useBarCodeDetectorIfSupported: false,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: false
-            },
-            videoConstraints: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
             }
         };
     }
@@ -451,8 +456,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log(`Switching camera from bad lens (${currentCamera ? currentCamera.label : 'unknown'}) to main lens (${bestCamera.label})...`);
                             await html5Qrcode.stop();
                             
+                            const switchConstraints = {
+                                deviceId: { exact: bestCamera.id },
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 }
+                            };
+                            
                             await html5Qrcode.start(
-                                bestCamera.id,
+                                switchConstraints,
                                 config,
                                 (decodedText, decodedResult) => {
                                     scannedBarcode = decodedText;
@@ -472,9 +483,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (targetCameraId) {
-                // 事前選定されたメインカメラで起動
+                // 事前選定されたメインカメラのIDと画質を結合して起動
+                const constraints = {
+                    deviceId: { exact: targetCameraId },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                };
                 await html5Qrcode.start(
-                    targetCameraId,
+                    constraints,
                     config,
                     (decodedText, decodedResult) => {
                         scannedBarcode = decodedText;
@@ -485,9 +501,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 );
                 await applyDynamicConstraints();
             } else {
-                // デフォルトの背面指定で起動 (初回パーミッション要求を兼ねる)
+                // デフォルトの背面指定と画質を結合して起動 (初回パーミッション要求を兼ねる)
+                const constraints = {
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                };
                 await html5Qrcode.start(
-                    { facingMode: "environment" },
+                    constraints,
                     config,
                     (decodedText, decodedResult) => {
                         scannedBarcode = decodedText;
