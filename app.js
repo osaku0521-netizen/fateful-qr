@@ -406,17 +406,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const config = getScannerConfig();
 
         async function onScannerStarted() {
-            await applyDynamicCameraConstraints();
-            await getCameras();
-            
-            const activeSettings = html5Qrcode.getRunningTrackSettings();
-            if (activeSettings && activeSettings.deviceId) {
-                currentCameraIdx = cameraDevices.findIndex(d => d.id === activeSettings.deviceId);
-                if (currentCameraIdx === -1) currentCameraIdx = 0;
+            try {
+                await applyDynamicCameraConstraints();
+            } catch (e) {
+                console.warn("Failed to apply dynamic constraints:", e);
+            }
+
+            try {
+                await getCameras();
+            } catch (e) {
+                console.warn("Failed to get cameras:", e);
             }
             
-            if (cameraDevices.length > 1) {
-                btnSwitchCamera.classList.remove('hidden');
+            try {
+                const activeSettings = html5Qrcode.getRunningTrackSettings();
+                if (activeSettings && activeSettings.deviceId && cameraDevices.length > 0) {
+                    currentCameraIdx = cameraDevices.findIndex(d => d.id === activeSettings.deviceId);
+                    if (currentCameraIdx === -1) currentCameraIdx = 0;
+                }
+            } catch (e) {
+                console.warn("Failed to get running track settings:", e);
+            }
+            
+            try {
+                if (cameraDevices && cameraDevices.length > 1) {
+                    btnSwitchCamera.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.warn("Failed to update switch camera button visibility:", e);
             }
         }
 
