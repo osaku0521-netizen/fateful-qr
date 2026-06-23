@@ -447,11 +447,6 @@ body {
     z-index: 3;
 }
 
-#qr-reader video {
-    object-fit: cover !important;
-    width: 100% !important;
-    height: 100% !important;
-}
 
 .scan-placeholder {
     display: flex;
