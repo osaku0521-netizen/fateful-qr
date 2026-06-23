@@ -299,6 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedBirthDate = getSelectedBirthDate();
 
         qrReaderEl.classList.remove('hidden');
+        const customOverlay = document.getElementById('scan-overlay-custom');
+        if (customOverlay) {
+            customOverlay.classList.remove('hidden');
+        }
         scanPlaceholder.classList.add('hidden');
         btnStartScan.classList.add('hidden');
         btnStopScan.classList.remove('hidden');
@@ -315,11 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const config = {
             fps: 15,
-            qrbox: (width, height) => {
-                // A square box fits both QR codes and EAN-13 barcodes comfortably
-                const size = Math.min(width * 0.8, height * 0.8, 280);
-                return { width: size, height: size };
-            },
             aspectRatio: 1.333333,
             useBarCodeDetectorIfSupported: false,
             experimentalFeatures: {
@@ -336,34 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
         async function applyDynamicCameraConstraints() {
             try {
                 if (!html5Qrcode) return;
-
-                // Wait a tiny bit for video element dimensions to be populated on slower devices
-                let videoEl = document.querySelector('#qr-reader video');
-                if (videoEl && (!videoEl.videoWidth || !videoEl.videoHeight)) {
-                    await new Promise(r => setTimeout(r, 150));
-                }
-
-                let streamWidth = 0;
-                let streamHeight = 0;
-
-                if (videoEl && videoEl.videoWidth && videoEl.videoHeight) {
-                    streamWidth = videoEl.videoWidth;
-                    streamHeight = videoEl.videoHeight;
-                } else {
-                    const settings = html5Qrcode.getRunningTrackSettings();
-                    if (settings && settings.width && settings.height) {
-                        streamWidth = settings.width;
-                        streamHeight = settings.height;
-                    }
-                }
-
-                if (streamWidth && streamHeight) {
-                    const scanArea = document.querySelector('.scan-area');
-                    if (scanArea) {
-                        scanArea.style.aspectRatio = `${streamWidth} / ${streamHeight}`;
-                        console.log(`Updated scan-area aspect-ratio to: ${streamWidth} / ${streamHeight}`);
-                    }
-                }
 
                 const capabilities = html5Qrcode.getRunningTrackCapabilities();
                 const settings = html5Qrcode.getRunningTrackSettings();
@@ -396,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log("Applied dynamic video constraints successfully");
                 }
             } catch (constrErr) {
-                console.warn("Could not apply dynamic video constraints/aspect ratio:", constrErr);
+                console.warn("Could not apply dynamic video constraints:", constrErr);
             }
         }
 
@@ -428,10 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         experimentalFeatures: {
                             useBarCodeDetectorIfSupported: false
                         },
-                        qrbox: (width, height) => {
-                            const size = Math.min(width * 0.8, height * 0.8, 280);
-                            return { width: size, height: size };
-                        },
                         videoConstraints: {
                             facingMode: "environment",
                             aspectRatio: { ideal: 1.333333 }
@@ -456,10 +423,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function stopScanner() {
-        // Reset aspect ratio of scan-area to default 4/3
-        const scanArea = document.querySelector('.scan-area');
-        if (scanArea) {
-            scanArea.style.aspectRatio = '4/3';
+        const customOverlay = document.getElementById('scan-overlay-custom');
+        if (customOverlay) {
+            customOverlay.classList.add('hidden');
         }
 
         if (html5Qrcode && html5Qrcode.isScanning) {

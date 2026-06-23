@@ -1191,3 +1191,58 @@ body {
     height: 100%;
     display: block;
 }
+
+/* Custom Visual Scan Overlay (pure CSS, stable & non-collapsing) */
+.scan-overlay-custom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scan-frame-custom {
+    width: 200px;
+    height: 200px;
+    border: 4px solid var(--color-mystic-cyan);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.4);
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Corner bracket details for a retro look */
+.scan-frame-custom::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    border: 4px solid var(--color-mystic-purple);
+    clip-path: polygon(
+        0 0, 24px 0, 24px 24px, 0 24px, 0 0,
+        100% 0, 100% 24px, calc(100% - 24px) 24px, calc(100% - 24px) 0, 100% 0,
+        100% 100%, calc(100% - 24px) 100%, calc(100% - 24px) calc(100% - 24px), 100% calc(100% - 24px), 100% 100%,
+        0 100%, 0 calc(100% - 24px), 24px calc(100% - 24px), 24px 100%, 0 100%
+    );
+}
+
+.scan-line-custom {
+    position: absolute;
+    width: 190px;
+    height: 4px;
+    background: linear-gradient(to right, transparent, var(--color-mystic-pink), transparent);
+    box-shadow: 0 0 8px var(--color-mystic-pink);
+    animation: custom-scan 2.0s linear infinite;
+}
+
+@keyframes custom-scan {
+    0% { transform: translateY(-90px); }
+    50% { transform: translateY(90px); }
+    100% { transform: translateY(-90px); }
+}

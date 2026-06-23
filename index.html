@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=28">
+    <link rel="stylesheet" href="styles.css?v=29">
     <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 </head>
@@ -47,6 +47,10 @@
                     <!-- Scan / Camera Area -->
                     <div class="scan-area">
                         <div id="qr-reader" class="hidden"></div>
+                        <div id="scan-overlay-custom" class="scan-overlay-custom hidden">
+                            <div class="scan-frame-custom"></div>
+                            <div class="scan-line-custom"></div>
+                        </div>
                         <div id="scan-placeholder" class="scan-placeholder">
                             <div class="fateful-aura-badge">Fateful Aura</div>
                             <div class="placeholder-scroll">
@@ -263,6 +267,6 @@
     </div>
 
     <!-- Application Script -->
-    <script src="app.js?v=28" defer></script>
+    <script src="app.js?v=29" defer></script>
 </body>
 </html>
