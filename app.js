@@ -256,21 +256,38 @@ document.addEventListener('DOMContentLoaded', () => {
         btnStopScan.classList.remove('hidden');
 
         if (!html5Qrcode) {
-            html5Qrcode = new Html5Qrcode("qr-reader");
+            html5Qrcode = new Html5Qrcode("qr-reader", {
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E,
+                    Html5QrcodeSupportedFormats.ITF
+                ],
+                verbose: false
+            });
         }
 
         const config = {
-            fps: 10,
+            fps: 15,
             qrbox: (width, height) => {
-                const size = Math.min(width, height) * 0.7;
-                return { width: size, height: size };
-            },
-            aspectRatio: 1.333333
+                // A wide rectangular box fits both 1D barcodes and QR codes much better
+                const w = Math.min(width * 0.85, 360);
+                const h = Math.min(height * 0.45, 180);
+                return { width: w, height: h };
+            }
         };
 
         try {
             await html5Qrcode.start(
-                { facingMode: "environment" },
+                { 
+                    facingMode: "environment",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
                 config,
                 (decodedText, decodedResult) => {
                     scannedBarcode = decodedText;
