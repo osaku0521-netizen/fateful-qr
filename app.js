@@ -278,16 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const w = Math.min(width * 0.85, 360);
                 const h = Math.min(height * 0.45, 180);
                 return { width: w, height: h };
+            },
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
         };
 
         try {
+            // Attempt start with HD video constraints
             await html5Qrcode.start(
-                { 
-                    facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                },
+                { facingMode: "environment" },
                 config,
                 (decodedText, decodedResult) => {
                     scannedBarcode = decodedText;
@@ -299,9 +301,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             );
         } catch (err) {
-            console.error("Camera scan start failed:", err);
-            alert("カメラの起動に失敗しました。ファイルアップロードかデモモードをご利用ください。");
-            stopScanner();
+            console.warn("First camera start failed, retrying with fallback constraints:", err);
+            try {
+                // Fallback attempt: request simple environment camera without any strict resolution constraints
+                await html5Qrcode.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: (width, height) => {
+                            const w = Math.min(width * 0.85, 360);
+                            const h = Math.min(height * 0.45, 180);
+                            return { width: w, height: h };
+                        }
+                    },
+                    (decodedText, decodedResult) => {
+                        scannedBarcode = decodedText;
+                        stopScanner();
+                        proceedToAnalysis();
+                    },
+                    (errorMessage) => {
+                        // Ignore errors
+                    }
+                );
+            } catch (fallbackErr) {
+                console.error("Camera scan start failed completely:", fallbackErr);
+                alert("カメラの起動に失敗しました。カメラの使用許可設定を確認するか、ファイルアップロードをご利用ください。");
+                stopScanner();
+            }
         }
     }
 
