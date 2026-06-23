@@ -1265,3 +1265,14 @@ body {
     pointer-events: none;
     z-index: 12;
 }
+
+
+.scanned-image-preview {
+    max-width: 90%;
+    max-height: 90%;
+    border: 3px solid var(--color-mystic-purple);
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+    object-fit: contain;
+    image-rendering: auto; /* Photo preview should look clear, not pixelated */
+}

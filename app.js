@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const scanPlaceholder = document.getElementById('scan-placeholder');
     const fileUpload = document.getElementById('file-upload');
     
-    // Buttons
-    const btnStartScan = document.getElementById('btn-start-scan');
-    const btnStopScan = document.getElementById('btn-stop-scan');
     const btnMockScan = document.getElementById('btn-mock-scan');
     const btnProceedJudge = document.getElementById('btn-proceed-judge');
     const btnRetryInput = document.getElementById('btn-retry-input');
@@ -294,286 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
     // BARCODE SCANNING CONTROL (html5-qrcode)
     // ----------------------------------------------------------------------
-    // カメラのスコアリング関数 (英語・日本語の両ラベルに対応)
-    function getCameraScore(device) {
-        const label = (device.label || "").toLowerCase();
-        
-        // フロントカメラは除外 (最優先度: 0)
-        if (label.includes("front") || 
-            label.includes("user") || 
-            label.includes("前面") || 
-            label.includes("フロント") || 
-            label.includes("インカメラ") || 
-            label.includes("内カメラ") ||
-            label.includes("truedepth") ||
-            label.includes("true-depth") ||
-            label.includes("selfie") ||
-            label.includes("face")) {
-            return 0;
-        }
-        
-        const isBack = label.includes("back") || label.includes("rear") || label.includes("environment") || label.includes("背面") || label.includes("アウト") || label.includes("外カメラ");
-        
-        if (isBack) {
-            // 超広角 (0.5x) はQRコードスキャンに最も不適なため優先度低
-            if (label.includes("ultra") || label.includes("0.5x") || label.includes("超広角") || (label.includes("wide-angle") && label.includes("ultra"))) {
-                return 1;
-            }
-            // 望遠もピント合わせが遅れるため優先度低
-            if (label.includes("telephoto") || label.includes("zoom") || label.includes("望遠") || label.includes("2x") || label.includes("3x") || label.includes("5x")) {
-                return 2;
-            }
-            // メイン広角 (1x) カメラを最優先
-            if (label.includes("wide") || label.includes("main") || label.includes("広角") || label.includes("1x") || label.includes("標準")) {
-                return 5;
-            }
-            return 4; // その他背面
-        }
-        
-        // ラベルに back 等が含まれず直接レンズ特徴がある場合
-        if (label.includes("ultra") || label.includes("超広角")) return 1;
-        if (label.includes("telephoto") || label.includes("望遠")) return 2;
-        if (label.includes("wide") || label.includes("main") || label.includes("広角") || label.includes("1x")) return 5;
-        
-        return 3; // 不明
-    }
-
-    async function applyDynamicConstraints() {
-        try {
-            if (!html5Qrcode || !html5Qrcode.isScanning) return;
-
-            let capabilities = {};
-            try {
-                capabilities = html5Qrcode.getRunningTrackCapabilities() || {};
-            } catch (capErr) {
-                console.warn("Failed to get track capabilities:", capErr);
-            }
-
-            const constraints = {};
-            let hasAdvanced = false;
-            const advancedConstraint = {};
-
-            // 1.25倍程度のズームを設定してピント合わせを容易にする
-            if (capabilities.zoom) {
-                const idealZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.25));
-                advancedConstraint.zoom = idealZoom;
-                hasAdvanced = true;
-                console.log(`Setting zoom to: ${idealZoom}`);
-            }
-
-            if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
-                constraints.focusMode = "continuous";
-                console.log("Setting focusMode to continuous");
-            }
-
-            if (hasAdvanced) {
-                constraints.advanced = [advancedConstraint];
-            }
-
-            if (Object.keys(constraints).length > 0) {
-                await html5Qrcode.applyVideoConstraints(constraints);
-                console.log("Applied dynamic video constraints successfully:", constraints);
-            }
-        } catch (constrErr) {
-            console.warn("Could not apply dynamic video constraints:", constrErr);
-        }
-    }
-
-    function getScannerConfig() {
-        return {
-            fps: 10,
-            useBarCodeDetectorIfSupported: false,
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: false
-            }
-        };
-    }
-
-    async function startScanner() {
-        initAudio();
-        selectedBirthDate = getSelectedBirthDate();
-
-        qrReaderEl.classList.remove('hidden');
-        const customOverlay = document.getElementById('scan-overlay-custom');
-        if (customOverlay) {
-            customOverlay.classList.remove('hidden');
-        }
-        scanPlaceholder.classList.add('hidden');
-        btnStartScan.classList.add('hidden');
-        btnStopScan.classList.remove('hidden');
-
-        if (!html5Qrcode) {
-            html5Qrcode = new Html5Qrcode("qr-reader", {
-                useBarCodeDetectorIfSupported: false,
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: false
-                },
-                verbose: false
-            });
-        }
-
-        const config = getScannerConfig();
-
-        // 1. パーミッションがすでに許可されている場合は、事前に最適なカメラIDの選定を試みる
-        let targetCameraId = null;
-        try {
-            const list = await Html5Qrcode.getCameras();
-            if (list && list.length > 0) {
-                const hasLabels = list.some(d => d.label && d.label.length > 0);
-                if (hasLabels) {
-                    const sortedList = [...list].sort((a, b) => getCameraScore(b) - getCameraScore(a));
-                    const bestCamera = sortedList[0];
-                    if (getCameraScore(bestCamera) >= 4) {
-                        targetCameraId = bestCamera.id;
-                        console.log("Pre-selected best camera:", bestCamera.label, targetCameraId);
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("Failed to pre-enumerate cameras:", e);
-        }
-
-        // カメラ起動後にズーム等を適用し、かつ超広角が起動している場合は標準カメラへの切り替えをチェックする関数
-        async function postStartCheck() {
-            // ズームとAFを適用
-            await applyDynamicConstraints();
-
-            // 超広角からメインカメラへのホットスワップ検証
-            try {
-                const activeSettings = html5Qrcode.getRunningTrackSettings();
-                if (activeSettings && activeSettings.deviceId) {
-                    const list = await Html5Qrcode.getCameras();
-                    if (list && list.length > 1) {
-                        const currentCamera = list.find(d => d.id === activeSettings.deviceId);
-                        const currentScore = currentCamera ? getCameraScore(currentCamera) : 3;
-
-                        const sortedList = [...list].sort((a, b) => getCameraScore(b) - getCameraScore(a));
-                        const bestCamera = sortedList[0];
-                        const bestScore = getCameraScore(bestCamera);
-
-                        // もし現在超広角(スコア2以下)で、かつより良い標準メインレンズ(スコア4以上)があれば切り替え
-                        if (currentScore <= 2 && bestScore >= 4 && bestCamera.id !== activeSettings.deviceId) {
-                            console.log(`Switching camera from bad lens (${currentCamera ? currentCamera.label : 'unknown'}) to main lens (${bestCamera.label})...`);
-                            await html5Qrcode.stop();
-                            
-                            const switchConstraints = {
-                                deviceId: { exact: bestCamera.id },
-                                width: { ideal: 1280 },
-                                height: { ideal: 720 }
-                            };
-                            
-                            await html5Qrcode.start(
-                                switchConstraints,
-                                config,
-                                (decodedText, decodedResult) => {
-                                    scannedBarcode = decodedText;
-                                    stopScanner();
-                                    proceedToAnalysis();
-                                },
-                                (errorMessage) => {}
-                            );
-                            await applyDynamicConstraints();
-                        }
-                    }
-                }
-            } catch (postErr) {
-                console.warn("Post-start camera selection check failed:", postErr);
-            }
-        }
-
-        try {
-            if (targetCameraId) {
-                // 事前選定されたメインカメラのIDと画質を結合して起動
-                const constraints = {
-                    deviceId: { exact: targetCameraId },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                };
-                await html5Qrcode.start(
-                    constraints,
-                    config,
-                    (decodedText, decodedResult) => {
-                        scannedBarcode = decodedText;
-                        stopScanner();
-                        proceedToAnalysis();
-                    },
-                    (errorMessage) => {}
-                );
-                await applyDynamicConstraints();
-            } else {
-                // デフォルトの背面指定と画質を結合して起動 (初回パーミッション要求を兼ねる)
-                const constraints = {
-                    facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                };
-                await html5Qrcode.start(
-                    constraints,
-                    config,
-                    (decodedText, decodedResult) => {
-                        scannedBarcode = decodedText;
-                        stopScanner();
-                        proceedToAnalysis();
-                    },
-                    (errorMessage) => {
-                        // Ignore errors during continuous scan frames
-                    }
-                );
-                await postStartCheck();
-            }
-        } catch (err) {
-            console.warn("First camera start failed, retrying with fallback constraints:", err);
-            try {
-                // フォールバック: 解像度制約などを一切排した背面カメラ起動
-                await html5Qrcode.start(
-                    { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        useBarCodeDetectorIfSupported: false,
-                        experimentalFeatures: {
-                            useBarCodeDetectorIfSupported: false
-                        }
-                    },
-                    (decodedText, decodedResult) => {
-                        scannedBarcode = decodedText;
-                        stopScanner();
-                        proceedToAnalysis();
-                    },
-                    (errorMessage) => {
-                        // Ignore errors
-                    }
-                );
-            } catch (fallbackErr) {
-                console.error("Camera scan start failed completely:", fallbackErr);
-                alert("カメラの起動に失敗しました。カメラの使用許可設定を確認するか、ファイルアップロードをご利用ください。");
-                stopScanner();
-            }
-        }
-    }
-
-    function stopScanner() {
-        const customOverlay = document.getElementById('scan-overlay-custom');
-        if (customOverlay) {
-            customOverlay.classList.add('hidden');
-        }
-
-        if (html5Qrcode && html5Qrcode.isScanning) {
-            html5Qrcode.stop().then(() => {
-                qrReaderEl.classList.add('hidden');
-                scanPlaceholder.classList.remove('hidden');
-                btnStartScan.classList.remove('hidden');
-                btnStopScan.classList.add('hidden');
-            }).catch(err => {
-                console.error("Failed to stop scanner:", err);
-            });
-        } else {
-            qrReaderEl.classList.add('hidden');
-            scanPlaceholder.classList.remove('hidden');
-            btnStartScan.classList.remove('hidden');
-            btnStopScan.classList.add('hidden');
-        }
-    }
-
+    // ----------------------------------------------------------------------
+    // FILE/CAMERA SCANNING & SIMULATION
+    // ----------------------------------------------------------------------
     fileUpload.addEventListener('change', async (e) => {
         initAudio();
         selectedBirthDate = getSelectedBirthDate();
@@ -581,24 +301,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        stopScanner();
-
-        if (!html5Qrcode) {
-            html5Qrcode = new Html5Qrcode("qr-reader");
-        }
-
+        // Transition to analysis panel immediately
         showPanel('analyze');
+        
+        const previewContainer = document.getElementById('scanned-preview-container');
         const progressFill = document.getElementById('analyze-progress');
         const progressText = document.getElementById('analyze-text');
         const resultPanel = document.getElementById('analyze-result-panel');
+        
         resultPanel.classList.add('hidden');
         progressFill.style.width = '20%';
-        progressText.innerText = '画像をアップロード中...';
+        progressText.innerText = '画像を読み込み中...';
+
+        // Display captured photo inside the retro metal analysis container
+        const objectUrl = URL.createObjectURL(file);
+        previewContainer.innerHTML = `<img src="${objectUrl}" class="scanned-image-preview" alt="Scanned Target Image">`;
+
+        if (!html5Qrcode) {
+            html5Qrcode = new Html5Qrcode("qr-reader"); // Keep instance for scanning static files
+        }
 
         setTimeout(async () => {
             try {
                 progressFill.style.width = '60%';
-                progressText.innerText = 'バーコードのパターンを検出中...';
+                progressText.innerText = '運命の紋章（コード）を検出中...';
                 
                 const decodedText = await html5Qrcode.scanFile(file);
                 scannedBarcode = decodedText;
@@ -608,12 +334,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 finishAnalysis();
             } catch (err) {
                 console.warn("File QR scan failed, using simulated code based on file metadata:", err);
+                // Deterministic fallback code to keep game playable
                 const fakeCode = "49" + Math.abs(getHashCode(file.name + file.size)).toString().substring(0, 11);
                 scannedBarcode = fakeCode;
                 
                 progressFill.style.width = '100%';
-                progressText.innerText = '解析成功（パターン抽出）';
+                progressText.innerText = '解析成功（暗号パターン抽出）';
                 finishAnalysis();
+            } finally {
+                // Free URL object resource
+                URL.revokeObjectURL(objectUrl);
             }
         }, 800);
     });
@@ -625,12 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const randomDigits = Math.floor(100000000000 + Math.random() * 900000000000).toString();
         scannedBarcode = "49" + randomDigits.substring(0, 11);
 
-        stopScanner();
+        // Transition directly to analysis
         proceedToAnalysis();
     });
-
-    btnStartScan.addEventListener('click', startScanner);
-    btnStopScan.addEventListener('click', stopScanner);
 
     // ----------------------------------------------------------------------
     // STEP 2: ANALYSIS AND SEED CALCULATION
@@ -1388,7 +1115,5 @@ document.addEventListener('DOMContentLoaded', () => {
         
         qrReaderEl.classList.add('hidden');
         scanPlaceholder.classList.remove('hidden');
-        btnStartScan.classList.remove('hidden');
-        btnStopScan.classList.add('hidden');
     });
 });

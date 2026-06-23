@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=36">
+    <link rel="stylesheet" href="styles.css?v=37">
     <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 </head>
@@ -47,17 +47,11 @@
                     <!-- Scan / Camera Area -->
                     <div class="scan-area">
                         <div id="qr-reader" class="hidden"></div>
-                        <div id="scan-overlay-custom" class="scan-overlay-custom hidden">
-                            <div class="scan-frame-custom"></div>
-                            <div class="scan-line-custom"></div>
-                            <div class="scan-instruction-custom">コードから20cmほど離して<br>ピントを合わせてください</div>
-                        </div>
                         <div id="scan-placeholder" class="scan-placeholder">
                             <div class="fateful-aura-badge">Fateful Aura</div>
                             <div class="placeholder-scroll">
-                                <span class="pixel-icon camera-icon">📷</span>
-                                <p>カメラを起動するか、<br>画像ファイルをアップロードしてください</p>
-                                <span class="pixel-icon file-icon">📄</span>
+                                <span class="pixel-icon scroll-icon">📜</span>
+                                <p>バーコードまたはQRコードを撮影するか、<br>保存した画像を選択してください</p>
                             </div>
                             <div class="crystal-ball-container">
                                 <div class="crystal-ball">🔮</div>
@@ -67,18 +61,12 @@
                     </div>
 
                     <div class="btn-group">
-                        <button id="btn-start-scan" class="btn btn-accent">
-                            <span class="icon">📷</span>カメラを起動してスキャン
-                        </button>
-                        <button id="btn-stop-scan" class="btn btn-secondary hidden">
-                            <span class="icon">⏹️</span>スキャンを停止
-                        </button>
-                        <label for="file-upload" class="btn btn-primary">
-                            <span class="icon">📁</span>バーコード画像をアップロード
+                        <label for="file-upload" class="btn btn-accent btn-large">
+                            <span class="icon">📷</span>運命のコードをスキャン（撮影・画像選択）
                             <input type="file" id="file-upload" accept="image/*" class="hidden">
                         </label>
                         <button id="btn-mock-scan" class="btn btn-secondary">
-                            <span class="icon">✨</span>デモ用コードで占う（カメラなし）
+                            <span class="icon">✨</span>デモ用コードで占う（画像なし）
                         </button>
                     </div>
                 </div>
@@ -268,6 +256,6 @@
     </div>
 
     <!-- Application Script -->
-    <script src="app.js?v=36" defer></script>
+    <script src="app.js?v=37" defer></script>
 </body>
 </html>
