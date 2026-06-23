@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Outfit:wght@400;600;800&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
     <!-- CSS -->
-    <link rel="stylesheet" href="styles.css?v=29">
+    <link rel="stylesheet" href="styles.css?v=30">
     <!-- HTML5-QRCode Library for scanning QR and JAN codes -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
 </head>
@@ -71,6 +71,9 @@
                         </button>
                         <button id="btn-stop-scan" class="btn btn-secondary hidden">
                             <span class="icon">⏹️</span>スキャンを停止
+                        </button>
+                        <button id="btn-switch-camera" class="btn btn-primary hidden">
+                            <span class="icon">🔄</span>カメラを切り替える
                         </button>
                         <label for="file-upload" class="btn btn-primary">
                             <span class="icon">📁</span>バーコード画像をアップロード
@@ -267,6 +270,6 @@
     </div>
 
     <!-- Application Script -->
-    <script src="app.js?v=29" defer></script>
+    <script src="app.js?v=30" defer></script>
 </body>
 </html>

@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Buttons
     const btnStartScan = document.getElementById('btn-start-scan');
     const btnStopScan = document.getElementById('btn-stop-scan');
+    const btnSwitchCamera = document.getElementById('btn-switch-camera');
     const btnMockScan = document.getElementById('btn-mock-scan');
     const btnProceedJudge = document.getElementById('btn-proceed-judge');
     const btnRetryInput = document.getElementById('btn-retry-input');
@@ -220,6 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // State Variables
     // ----------------------------------------------------------------------
     let html5Qrcode = null;
+    let cameraDevices = [];
+    let currentCameraIdx = 0;
     let selectedBirthDate = "";
     let scannedBarcode = "";
     let todayDateStr = "";
@@ -294,6 +297,89 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------------------------
     // BARCODE SCANNING CONTROL (html5-qrcode)
     // ----------------------------------------------------------------------
+    function getScannerConfig() {
+        return {
+            fps: 15,
+            aspectRatio: 1.333333,
+            useBarCodeDetectorIfSupported: false,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: false
+            },
+            videoConstraints: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                aspectRatio: { ideal: 1.333333 }
+            }
+        };
+    }
+
+    async function getCameras() {
+        try {
+            const devices = await Html5Qrcode.getCameras();
+            if (devices && devices.length > 0) {
+                // Filter out non-video devices if any (though getCameras should only return video)
+                let list = devices.filter(device => !device.kind || device.kind === 'videoinput');
+                
+                // Helper to score camera usefulness
+                function getCameraScore(device) {
+                    const label = (device.label || "").toLowerCase();
+                    
+                    // Front cameras
+                    if (label.includes("front") || label.includes("前面") || label.includes("イン") || label.includes("user")) {
+                        return 1;
+                    }
+                    
+                    // Back cameras
+                    if (label.includes("back") || label.includes("rear") || label.includes("背面") || label.includes("environment")) {
+                        // Exclude ultra-wide / telephoto from high score
+                        if (label.includes("ultra") || label.includes("超広角") || label.includes("0.5x") || label.includes("tele") || label.includes("望遠") || label.includes("zoom")) {
+                            return 2; // back but specialized lens
+                        }
+                        return 4; // main back camera
+                    }
+                    
+                    // Unknown cameras
+                    return 3;
+                }
+                
+                // Sort by score descending
+                list.sort((a, b) => getCameraScore(b) - getCameraScore(a));
+                
+                cameraDevices = list;
+                console.log("Sorted camera devices:", cameraDevices);
+            }
+        } catch (err) {
+            console.warn("Could not get camera devices list:", err);
+        }
+    }
+
+    async function applyDynamicCameraConstraints() {
+        try {
+            if (!html5Qrcode) return;
+
+            // Try to apply zoom and focusMode in a single constraints block to avoid overriding
+            try {
+                await html5Qrcode.applyVideoConstraints({
+                    focusMode: "continuous",
+                    advanced: [{ zoom: 1.3 }]
+                });
+                console.log("Applied focusMode continuous and zoom 1.3");
+            } catch (e) {
+                try {
+                    await html5Qrcode.applyVideoConstraints({
+                        advanced: [{ zoom: 1.3 }]
+                    });
+                    console.log("Applied zoom 1.3 only");
+                } catch (e2) {
+                    console.warn("Could not apply zoom or focusMode constraints:", e2);
+                }
+            }
+        } catch (constrErr) {
+            console.warn("Could not apply dynamic video constraints:", constrErr);
+        }
+    }
+
     async function startScanner() {
         initAudio();
         selectedBirthDate = getSelectedBirthDate();
@@ -317,57 +403,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const config = {
-            fps: 15,
-            aspectRatio: 1.333333,
-            useBarCodeDetectorIfSupported: false,
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: false
-            },
-            videoConstraints: {
-                facingMode: "environment",
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                aspectRatio: { ideal: 1.333333 }
+        const config = getScannerConfig();
+
+        async function onScannerStarted() {
+            await applyDynamicCameraConstraints();
+            await getCameras();
+            
+            const activeSettings = html5Qrcode.getRunningTrackSettings();
+            if (activeSettings && activeSettings.deviceId) {
+                currentCameraIdx = cameraDevices.findIndex(d => d.id === activeSettings.deviceId);
+                if (currentCameraIdx === -1) currentCameraIdx = 0;
             }
-        };
-
-        async function applyDynamicCameraConstraints() {
-            try {
-                if (!html5Qrcode) return;
-
-                const capabilities = html5Qrcode.getRunningTrackCapabilities();
-                const settings = html5Qrcode.getRunningTrackSettings();
-                console.log("Camera capabilities:", capabilities);
-                console.log("Camera settings:", settings);
-
-                const constraints = {};
-                let hasAdvanced = false;
-                const advancedConstraint = {};
-
-                // Apply minor zoom (e.g. 1.2x) if supported to help the camera focus on the code
-                if (capabilities.zoom) {
-                    const idealZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.2));
-                    advancedConstraint.zoom = idealZoom;
-                    hasAdvanced = true;
-                    console.log(`Setting zoom to: ${idealZoom}`);
-                }
-
-                if (capabilities.focusMode && capabilities.focusMode.includes("continuous")) {
-                    constraints.focusMode = "continuous";
-                    console.log("Setting focusMode to continuous");
-                }
-
-                if (hasAdvanced) {
-                    constraints.advanced = [advancedConstraint];
-                }
-
-                if (Object.keys(constraints).length > 0) {
-                    await html5Qrcode.applyVideoConstraints(constraints);
-                    console.log("Applied dynamic video constraints successfully");
-                }
-            } catch (constrErr) {
-                console.warn("Could not apply dynamic video constraints:", constrErr);
+            
+            if (cameraDevices.length > 1) {
+                btnSwitchCamera.classList.remove('hidden');
             }
         }
 
@@ -385,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Ignore errors during continuous scan frames
                 }
             );
-            await applyDynamicCameraConstraints();
+            await onScannerStarted();
         } catch (err) {
             console.warn("First camera start failed, retrying with fallback constraints:", err);
             try {
@@ -413,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Ignore errors
                     }
                 );
-                await applyDynamicCameraConstraints();
+                await onScannerStarted();
             } catch (fallbackErr) {
                 console.error("Camera scan start failed completely:", fallbackErr);
                 alert("カメラの起動に失敗しました。カメラの使用許可設定を確認するか、ファイルアップロードをご利用ください。");
@@ -427,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (customOverlay) {
             customOverlay.classList.add('hidden');
         }
+        btnSwitchCamera.classList.add('hidden');
 
         if (html5Qrcode && html5Qrcode.isScanning) {
             html5Qrcode.stop().then(() => {
@@ -502,6 +552,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnStartScan.addEventListener('click', startScanner);
     btnStopScan.addEventListener('click', stopScanner);
+
+    btnSwitchCamera.addEventListener('click', async () => {
+        if (!html5Qrcode || !html5Qrcode.isScanning) return;
+        if (cameraDevices.length <= 1) return;
+        btnSwitchCamera.classList.add('hidden');
+        try {
+            await html5Qrcode.stop();
+            currentCameraIdx = (currentCameraIdx + 1) % cameraDevices.length;
+            const targetCameraId = cameraDevices[currentCameraIdx].id;
+            
+            qrReaderEl.classList.remove('hidden');
+            const customOverlay = document.getElementById('scan-overlay-custom');
+            if (customOverlay) customOverlay.classList.remove('hidden');
+            
+            // Build config without facingMode to avoid conflicts when starting by cameraId
+            const config = {
+                fps: 15,
+                aspectRatio: 1.333333,
+                useBarCodeDetectorIfSupported: false,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: false
+                },
+                videoConstraints: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    aspectRatio: { ideal: 1.333333 }
+                }
+            };
+            
+            await html5Qrcode.start(
+                targetCameraId,
+                config,
+                (decodedText, decodedResult) => {
+                    scannedBarcode = decodedText;
+                    stopScanner();
+                    proceedToAnalysis();
+                },
+                (errorMessage) => {}
+            );
+            await applyDynamicCameraConstraints(); // Applies zoom & continuous focus
+            if (cameraDevices.length > 1) {
+                btnSwitchCamera.classList.remove('hidden');
+            }
+        } catch (err) {
+            console.error("Camera switch failed:", err);
+            startScanner(); // Fallback to default start
+        }
+    });
 
     // ----------------------------------------------------------------------
     // STEP 2: ANALYSIS AND SEED CALCULATION
